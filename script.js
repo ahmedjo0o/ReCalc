@@ -11,7 +11,7 @@ async function calculateVAT() {
         return { name, orders };
     });
 
-    const response = await fetch('https://your-backend-url.com/calculate', {
+    const response = await fetch('https://calc-backend-8wel.onrender.com', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ people, subTotal, total: totalOrder })
