@@ -1,0 +1,2 @@
+# ReCalc
+Receipt Calculator
