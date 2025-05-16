@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt Calculator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div id="language-selection">
+            <h1>Select Language</h1>
+            <button onclick="selectLanguage('en')">English</button>
+            <button onclick="selectLanguage('ar')">Arabic</button>
+        </div>
+        <div id="app-content" style="display: none;">
+            <h1 id="app-title">Receipt Calculator</h1>
+            <div id="step1">
+                <div class="input-group">
+                    <label for="num-people"><i class="fas fa-users"></i> <span id="label-num-people">Number of People:</span></label>
+                    <input type="number" id="num-people" min="1" required>
+                    <span id="num-people-error" class="error-message">Please fill this field</span>
+                </div>
+                <button id="generate-names-button" onclick="generateNames()"><span id="button-generate-names">Go</span></button>
+                <form id="names-form" class="names-container">
+                    <!-- Names fields will be added dynamically -->
+                </form>
+                <button id="next-button" onclick="goToStep2FromStep1()" style="display: none;"><span id="button-next">Next</span></button>
+            </div>
+            <div id="step2" style="display: none;">
+                <div class="input-group">
+                    <label for="total-order"><i class="fas fa-money-bill-wave"></i> <span id="label-total-order">Total Order Value:</span></label>
+                    <input type="number" id="total-order" step="0.01" required>
+                    <span id="total-order-error" class="error-message">Please fill this field</span>
+                </div>
+                <div class="input-group">
+                    <label for="sub-total"><i class="fas fa-receipt"></i> <span id="label-sub-total">Sub-total Value:</span></label>
+                    <input type="number" id="sub-total" step="0.01" required>
+                    <span id="sub-total-error" class="error-message">Please fill this field</span>
+                </div>
+                <button id="back-to-step1-button" onclick="goToStep1FromStep2()"><span id="button-back-to-step1">Back</span></button>
+                <button id="next-to-step3-button" onclick="goToStep3()"><span id="button-next-to-step3">Next</span></button>
+            </div>
+            <div id="step3" style="display: none;">
+                <div id="cards-container" class="cards-container">
+                    <!-- Cards will be added dynamically -->
+                </div>
+                <button id="back-to-step2-button" onclick="goToStep2FromStep3()"><span id="button-back-to-step2">Back</span></button>
+                <button id="calculate-button" onclick="calculateVAT()"><span id="button-calculate">Calculate</span></button>
+            </div>
+            <div id="result" style="display: none;">
+                <h2 id="results-title"><i class="fas fa-check-circle"></i> Results</h2>
+                <div id="result-cards-container" class="result-cards-container">
+                    <!-- Result cards will be displayed here -->
+                </div>
+                <button id="back-to-step3-button" onclick="goToStep3FromResults()"><span id="button-back-to-step3">Back</span></button>
+                <button id="start-again-button" onclick="startAgain()"><span id="button-start-again">Start Again</span></button>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <p><span id="footer-text">All rights reserved ©</span> <a href="https://facebook.com/ahmed.joo" target="_blank" onclick="openFacebook(event)">Ahmed Youssef</a></p>
+    </footer>
+    <script src="script.js"></script>
+</body>
+</html>
