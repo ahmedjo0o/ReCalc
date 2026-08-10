@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>How to use reCalc — Tutorial</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+  <script>window.startTime = Date.now();</script>
+  <script src="https://unpkg.com/lottie-web@5.9.4/build/player/lottie.min.js" defer></script>
+
+  <style>
+    .tutorial-step { margin: 24px 0; padding: 20px; border-radius: 12px; background:#fff; box-shadow:0 6px 20px rgba(12,20,40,0.04); }
+    .step-header { display:flex; gap:12px; align-items:center; margin-bottom:10px; }
+    .step-number { width:46px; height:46px; border-radius:50%; background:#f1f5f9; display:flex; align-items:center; justify-content:center; font-weight:700; color:#111; }
+    .step-title { margin:0; font-size:1.15rem; }
+    .en { direction:ltr; margin: 6px 0; }
+    .ar { direction:rtl; margin: 6px 0; font-family:'Cairo', sans-serif; }
+    figure.tutorial-fig { margin:12px 0 0; }
+    figcaption { font-size:13px; color:#556; margin-top:8px; text-align:center; }
+    .center { text-align:center; }
+  </style>
+</head>
+
+<body>
+  <div id="page-loader" class="active"><div class="loader-lottie"></div></div>
+
+  <div id="page-wrapper">
+
+    <!-- Logo -->
+    <div style="text-align:center; margin-top:50px;">
+      <a href="index.html"><img src="logo.svg" style="max-width:320px;"></a>
+    </div>
+
+    <main class="container" style="margin-top:22px; max-width:1000px;">
+      <h1 class="centered-title">How to use reCalc — Quick Tutorial / كيفية استخدام التطبيق — دليل سريع</h1>
+
+
+      <!-- STEP 1 -->
+      <article class="tutorial-step" id="step-1">
+        <div class="step-header">
+          <div class="step-number">1</div>
+          <h2 class="step-title">Start — Set number of people / ابدأ — حدد عدد الأشخاص</h2>
+        </div>
+
+        <p class="en">Enter how many people are splitting the receipt, then press <strong>Go</strong>. This creates name fields for each person.</p>
+        <p class="ar">أدخل عدد الأشخاص الذين سيشتركون في الفاتورة ثم اضغط <strong>ابدأ</strong>. سيقوم التطبيق بإنشاء حقول إدخال لكل شخص.</p>
+
+        <figure class="tutorial-fig">
+          <img src="screenshots/step-1.png" alt="Step 1" style="max-width:100%; border-radius:8px;">
+          <figcaption>Screenshot: enter number of people — صورة: إدخال عدد الأشخاص</figcaption>
+        </figure>
+      </article>
+
+
+      <!-- STEP 2 -->
+      <article class="tutorial-step" id="step-2">
+        <div class="step-header">
+          <div class="step-number">2</div>
+          <h2 class="step-title">Add names / أدخل الأسماء</h2>
+        </div>
+
+        <p class="en">Fill each person's name or use the favorites list. Then press <strong>Next</strong>.</p>
+        <p class="ar">اكتب أسماء الأشخاص أو اختر من قائمة المفضلات. ثم اضغط <strong>التالي</strong>.</p>
+
+        <figure class="tutorial-fig">
+          <img src="screenshots/step-2.png" alt="Step 2" style="max-width:100%; border-radius:8px;">
+          <figcaption>Screenshot: entering names — صورة: إدخال الأسماء</figcaption>
+        </figure>
+      </article>
+
+
+      <!-- STEP 3 -->
+      <article class="tutorial-step" id="step-3">
+        <div class="step-header">
+          <div class="step-number">3</div>
+          <h2 class="step-title">Totals & discount / الإجمالي والخصم</h2>
+        </div>
+
+        <p class="en">Enter the <strong>Total Receipt Value</strong>, the <strong>Sub-total</strong>, and the <strong>discount</strong> if applicable.</p>
+        <p class="ar">أدخل <strong>إجمالي الفاتورة</strong>، و<strong>المجموع الفرعي</strong>، و<strong>الخصم</strong> إذا وُجد.</p>
+
+        <figure class="tutorial-fig">
+          <img src="screenshots/step-3.png" alt="Step 3" style="max-width:100%; border-radius:8px;">
+          <figcaption>Screenshot: totals & discount — صورة: إجمالي الفاتورة والخصم</figcaption>
+        </figure>
+      </article>
+
+
+      <!-- STEP 4 -->
+      <article class="tutorial-step" id="step-4">
+        <div class="step-header">
+          <div class="step-number">4</div>
+          <h2 class="step-title">Assign orders / وزّع الطلبات</h2>
+        </div>
+
+        <p class="en">Enter the order value for each person. The app will split VAT, service, and discount proportionally.</p>
+        <p class="ar">أدخل قيمة طلب كل شخص. سيقوم التطبيق بتقسيم الضريبة والخدمة والخصم بشكل نسبي.</p>
+
+        <figure class="tutorial-fig">
+          <img src="screenshots/step-4.png" alt="Step 4" style="max-width:100%; border-radius:8px;">
+          <figcaption>Screenshot: entering orders — صورة: إدخال الطلبات</figcaption>
+        </figure>
+      </article>
+
+
+      <!-- STEP 5 -->
+      <article class="tutorial-step" id="step-5">
+        <div class="step-header">
+          <div class="step-number">5</div>
+          <h2 class="step-title">Calculate & share / احسب وشارك</h2>
+        </div>
+
+        <p class="en">Press <strong>Calculate</strong> to view each person’s final cost. Use <strong>Share</strong> or <strong>Export</strong> to save or send the results.</p>
+        <p class="ar">اضغط <strong>احسب</strong> لعرض المبلغ النهائي لكل شخص. يمكنك استخدام <strong>مشاركة</strong> أو <strong>تصدير</strong> لحفظ أو إرسال النتائج.</p>
+
+        <figure class="tutorial-fig">
+          <img src="screenshots/step-5.png" alt="Step 5" style="max-width:100%; border-radius:8px;">
+          <figcaption>Screenshot: final results — صورة: النتيجة النهائية</figcaption>
+        </figure>
+      </article>
+
+
+      <div class="center" style="margin:25px 0;">
+        <button onclick="window.location.href='index.html'" class="btn">Back to app / العودة للتطبيق</button>
+      </div>
+
+    </main>
+  </div>
+
+  <footer>
+    <div class="footer-row">
+      <div class="footer-links">
+        <a href="about.html">About</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="contact.html">Contact</a>
+        <a href="blog.html">Blog</a>
+      </div>
+      <span class="footer-rights"></span>
+    </div>
+  </footer>
+
+  <script src="firebase.js"></script>
+  <script src="translations.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>

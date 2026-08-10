@@ -1,0 +1,1009 @@
+/* Base styles */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Cairo', sans-serif;
+  background: linear-gradient(135deg, #80c1b5, #4e81b3);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: #333;
+
+  display: flex;
+  flex-direction: column;
+}
+
+body[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}
+
+body[dir="ltr"] {
+  direction: ltr;
+  text-align: left;
+}
+
+#page-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.centered-title {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.red-label {
+  color: #e74c3c;
+  font-weight: bold;
+}
+
+.no-label {
+  color: #888;     /* lighter gray */
+  font-style: italic;
+  font-weight: 400;
+}
+
+#howto-button { min-width: 160px; }
+#howto-button-wrapper { margin-bottom: 8px; }
+
+
+/* This is the "glass" container style, now scoped to index.html via #page-wrapper */
+#page-wrapper .container {
+  background: rgba(255, 255, 255, 0.5);
+  padding: 30px;
+  border-radius: 16px;
+  max-width: 1000px;
+  width: 90%;
+  box-sizing: border-box;
+  margin: 50px auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.cards-container,
+.result-cards-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 15px;
+}
+
+/* on medium screens */
+@media (min-width: 768px) {
+  .cards-container,
+  .result-cards-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* on big screens */
+@media (min-width: 1024px) {
+  .cards-container,
+  .result-cards-container {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.top-header {
+  max-width: 1000px;
+  width: 90%;
+  margin: 30px auto 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  direction: ltr;
+}
+
+
+#language-toggle {
+  display: flex;
+  padding: 0;
+  order: 1;
+}
+
+
+.lang-link {
+  font-size: 14px;
+  color: #004794;
+  cursor: pointer;
+  font-family: 'Cairo', sans-serif;
+  font-weight: bold;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.lang-link:hover {
+  color: #d62c1a;
+}
+
+.logo-container {
+  text-align: center;
+  margin-top: 10px;
+  width: 100%; /* ADDED */
+  order: 3; /* ADDED */
+}
+
+.logo-container img {
+  max-width: 320px;
+  height: auto;
+}
+
+#step2and3 label span {
+  font-weight: bold;
+}
+
+/* ---------- Compact Safari-style dropdown ---------- */
+
+.custom-datalist {
+  position: absolute;
+  z-index: 9999;
+  min-width: 180px;
+  max-width: 92%;
+  max-height: 50vh;
+  overflow-y: auto;
+  backdrop-filter: blur(20px);
+  background: rgba(255,255,255,0.85);
+  border-radius: 12px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.15);
+  border: 1px solid rgba(0,0,0,0.08);
+  padding: 4px 0;
+  -webkit-overflow-scrolling: touch;
+  font-family: 'Cairo', sans-serif;
+  transform-origin: top center;
+  transition: opacity 120ms ease, transform 120ms ease;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px) scale(0.98);
+}
+
+.custom-datalist.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+/* item rows */
+.custom-datalist .item {
+  display: block;
+  padding: 10px 16px;
+  font-size: 15px;
+  color: #242424;
+  cursor: pointer;
+  user-select: none;
+  background: transparent;
+  transition: background 0.15s ease;
+}
+
+/* thinner separators between items */
+.custom-datalist .item + .item {
+  border-top: 1px solid rgba(0,0,0,0.08);
+}
+
+/* hover/active state */
+.custom-datalist .item:hover,
+.custom-datalist .item.active {
+  background: rgba(0,0,0,0.05);
+}
+
+/* empty message */
+.custom-datalist .empty {
+  padding: 12px 16px;
+  color: #8b95a6;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* mobile tuning */
+@media (max-width: 420px) {
+  .custom-datalist {
+    border-radius: 10px;
+    padding: 4px 0;
+  }
+  .custom-datalist .item {
+    padding: 12px 18px;
+    font-size: 16px;
+  }
+}
+/* ---------- End of Compact Safari-style dropdown ---------- */
+
+
+/* Form styles */
+label {
+    display: block;
+    margin-top: 10px;
+}
+
+input[type="number"], input[type="text"] {
+    width: calc(100% - 22px);
+    padding: 12px;
+    margin-top: 0px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.5);
+    box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.1);
+	font-size: 16px;
+	box-sizing: border-box;     /* ensure padding included in height */
+    min-height: 42px;           /* match star button height */
+    vertical-align: middle;
+}
+
+/* REMOVED: .error classes on inputs were not used */
+
+.error-message {
+    color: #d62828;
+    background-color: rgba(255, 230, 230, 0.8);
+    padding: 8px 12px;
+    border: 1px solid #d62828;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    display: none;
+    margin-top: 10px;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Button styles */
+button {
+    display: inline-block;
+    padding: 12px 24px;
+    margin-top: 15px;
+    margin-right: 10px;
+    border: none;
+    border-radius: 8px;
+    background-color: #004794;
+    color: white;
+    font-family: 'Cairo', sans-serif;
+	font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+button:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+}
+
+/* Auth modal styles (new) */
+.auth-modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(3, 12, 34, 0.75);
+  z-index: 10000;
+  padding: 16px;
+}
+
+/* MERGED: Combined two separate rules into one */
+.auth-modal-content input[type="email"],
+.auth-modal-content input[type="password"] {
+  /* from block 1 */
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 8px 0;
+  padding: 10px;
+  border-radius: 8px;
+  /* from block 2 */
+  border: 1px solid rgba(0,0,0,0.06);
+  background: rgba(255,255,255,0.95);
+  box-shadow: none;
+  font-size: 15px;
+}
+
+
+/* Close button in modal header */
+.auth-close-btn {
+  background: white;
+  border: none;
+  font-size: 10px;
+  cursor: pointer;
+  color: #444;
+  padding: 6px;
+  border-radius: 6px;
+}
+.auth-close-btn:hover { background: #eeeeee; }
+
+/* Import Google's "Roboto" font */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@500&display=swap');
+
+/* --- Google Button Styles --- */
+
+.google-sign-in-button {
+  /* Layout */
+  display: inline-flex; /* Use flexbox for alignment */
+  align-items: center;  /* Vertically center content */
+  
+  /* Sizing */
+  height: 40px;         /* Standard Google button height */
+  padding: 0;           /* Reset padding, we'll control it with inner elements */
+
+  /* Visuals */
+  background-color: #FFFFFF;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  box-shadow: 0 1px 1px 0 rgba(0,0,0,0.1); /* Subtle shadow */
+  color: #3c4043;      /* Google's standard text color */
+  text-decoration: none; /* Remove underline from the link */
+
+  /* Font */
+  font-family: 'Roboto', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.25px;
+
+  /* Interaction */
+  cursor: pointer;
+  transition: background-color .2s, box-shadow .2s;
+}
+
+.google-button-wrapper {
+	/* Center Google button inside modal */
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+
+.google-icon-wrapper {
+  /* Box for the icon */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;  /* Square box for the icon */
+  height: 100%; /* Fill the button's height */
+}
+
+.google-icon-wrapper svg {
+  width: 18px;  /* Standard icon size */
+  height: 18px;
+}
+
+.button-text {
+  /* Space between icon and right edge */
+  padding: 0 12px 0 12px;
+}
+
+/* --- Interaction States --- */
+
+.google-sign-in-button:hover {
+  background-color: #f8f9fa; /* Slight gray background on hover */
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .3), 0 1px 3px 1px rgba(60, 64, 67, .15); /* Google's 'raised' shadow */
+}
+
+.google-sign-in-button:focus {
+  outline: none; /* Remove default blue ring */
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .3), 0 1px 3px 1px rgba(60, 64, 67, .15); /* Same as hover */
+}
+
+.google-sign-in-button:active {
+  background-color: #ebebeb; /* Darker background on click */
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .3), 0 1px 3px 1px rgba(60, 64, 67, .15);
+}
+
+
+/* small primary / secondary helpers (reuse main styles where possible) */
+button.primary { background-color: #004794; color: #fff; border-radius: 8px; padding: 10px 14px; }
+button.secondary { background: #f0f4f8; color: #003049; padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.06); }
+
+/* ensure form inputs inside modal inherit main input styles */
+/* MERGED: This rule was merged with the other definition above */
+
+
+/* Auth box */
+.auth-area {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0; /* No background or border by default */
+  background: none;
+  border: none;
+  box-shadow: none;
+  width: fit-content;
+  order: 2;
+  margin-left: auto;
+}
+
+/* When user is logged in, show styled box */
+.auth-area.logged-in {
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+
+
+/* small buttons inside auth box (both sign in and small manage/logout) */
+.auth-area button {
+  padding: 6px 10px;
+  font-size: 13px;
+  border-radius: 8px;
+  white-space: nowrap;
+  margin: 0;
+  line-height: 1;
+}
+
+/* user info area inside the fixed auth box */
+#user-box {
+  display: flex;
+  flex-direction: row; /* show name and small controls side-by-side in the box */
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+/* the welcome text should be compact to fit the box */
+#user-info {
+  font-size: 13px;
+  font-weight: 700;
+  color: #002e5b;
+  margin: 0;
+  line-height: 1;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* small Manage / Logout controls that appear after login */
+#auth-controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin: 0;
+}
+#auth-controls button {
+  padding: 6px 8px;
+  font-size: 12px;
+  border-radius: 8px;
+  background: #f0f4f8;
+  color: #003049;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+
+/* Manage page */
+/* REMOVED: .manage-grid was unused */
+
+/* section card wrapper */
+.manage-section {
+  background: rgba(255,255,255,0.75);
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.04);
+}
+
+/* section header */
+.manage-section h2 {
+  margin-top: 0;
+}
+
+/* action row for profile inputs */
+.manage-row {
+  display:flex;
+  gap:10px;
+  align-items:center;
+  margin-top:8px;
+}
+.manage-row input {
+  flex:1;
+  padding:8px;
+  border-radius:6px;
+  border:1px solid rgba(0,0,0,0.06);
+}
+
+/* compact buttons */
+.manage-section button {
+  padding:8px 12px;
+  font-size:14px;
+  border-radius:8px;
+}
+
+/* small helper text */
+#manage-note {
+  color:#b1cdda;
+  font-size:13px;
+  margin-top: 18px;
+}
+
+/* minimal inline add-to-favorite button (tiny) */
+.add-fav-mini {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  padding: 0;
+  border-radius: 6px;
+  border: 1px solid rgba(0,0,0,0.06);
+  background: #fff8e1;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  align-self: center;         /* ensure it centers inside flex row */
+  margin: 0;
+  margin-left: 4px;
+}
+
+.names-container > div {
+  margin-bottom: 6px; /* small vertical space between name rows */
+}
+
+.add-fav-mini:hover {
+  transform: translateY(-1px); }
+  
+.add-fav-mini.saved {
+  background: #ffd500;
+  color: #082032;
+  border-color: rgba(0,0,0,0.12);
+}
+
+
+/* favorites manager table */
+.fav-row {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
+  padding:8px;
+  border-bottom:1px solid rgba(0,0,0,0.05);
+}
+.fav-actions button {
+  padding:6px 8px;
+  font-size:13px;
+  border-radius:6px;
+}
+
+/* Card styles */
+.card {
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 10px;
+    padding: 10px;
+}
+
+/* Override for solid white auth modal */
+.auth-modal-content {
+  background: #b1cdda;
+}
+
+.card-header {
+    font-weight: bold;
+    font-size: 1.2em;
+    margin-bottom: 5px;
+}
+
+.card-content {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+}
+
+.total-to-pay {
+    font-weight: bold;
+    color: #e74c3c;
+    border: 1px solid #e74c3c;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.card-controls {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.card-controls button {
+    width: 30px;
+    height: 30px;
+    margin: 0 5px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    line-height: 1;
+}
+
+.card button.share-button {
+    background-color: #7ea8d7;  /* أزرق فاتح */
+    color: white;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-weight: bold;
+    font-size: 14px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-top: 8px;
+    transition: background-color 0.3s ease, transform 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card button.share-button:hover {
+    background-color: #5b85b6;  /* أغمق درجة عند hover */
+    transform: translateY(-2px);
+}
+
+.card button.share-button svg {
+    margin-right: 5px;
+}
+
+.card-total {
+    color: green;
+    font-size: 0.85em;
+    margin-top: 5px;
+}
+
+/* Footer styles */
+footer {
+  background: linear-gradient(135deg, #80c1b599, #4e81b399); /* 99 = شفافية حوالي 60% */
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  font-size: 18px;
+  font-family: 'Cairo', sans-serif;
+  padding: 10px 0;
+  text-align: center;
+  width: 100%;
+}
+
+footer p {
+    margin: 0;
+    color: #333;
+}
+
+footer a {
+    color: #004794;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+footer a:hover {
+    color: #d62c1a;
+}
+
+.footer-row {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  padding: 0 16px;
+  max-width: 1000px;
+  margin: 10px auto;
+  font-size: 13px;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.footer-links a {
+  color: #004794;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.footer-links a:hover {
+  color: #d62c1a;
+}
+
+.footer-rights {
+  white-space: nowrap;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+
+
+.coffee-button-wrapper {
+  text-align: center;
+  margin: 30px 0 10px; /* فوق الفوتر مباشرة */
+}
+
+.coffee-button img {
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.coffee-button img:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+}
+
+.coffee-message {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.coffee-line1 {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 0px;
+}
+
+.coffee-line2 {
+  font-size: 1rem;
+  color: #333;
+}
+
+/* ---------- History Grid + Card Spacing + Small Delete Button ---------- */
+/* This is the "content" container for manage.html and history.html */
+/* It no longer conflicts with the .container on index.html */
+.container {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Responsive grid for full and preview history lists */
+#full-history-list,
+#history-list {
+  display: grid;
+  gap: 20px;              /* increased gap so vertical boxes have enough space */
+  align-items: stretch;
+  grid-template-columns: repeat(1, 1fr);
+  box-sizing: border-box;
+}
+
+/* Medium screens: 2 columns */
+@media (min-width: 700px) {
+  #full-history-list,
+  #history-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Large screens: 3 columns */
+@media (min-width: 1024px) {
+  #full-history-list,
+  #history-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Card base styling and internal spacing */
+#full-history-list .card,
+#history-list .card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  padding: 14px;               /* internal padding (increases vertical spacing) */
+  gap: 12px;                   /* spacing between elements inside the card */
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid rgba(3, 12, 34, 0.06);
+  box-shadow: 0 4px 10px rgba(11, 22, 40, 0.02);
+  box-sizing: border-box;
+}
+
+/* history numeric value (red) */
+.history-value-blue {
+  color: #004794;
+  font-weight: 700;
+  margin-left: 6px;
+}
+
+/* ----- Enhanced History Card Layout ----- */
+.history-card {
+  padding: 12px 14px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  margin-bottom: 14px;
+}
+
+.history-totals {
+  display: flex;
+  flex-direction: column;
+  gap: 4px; /* tighter spacing */
+}
+
+.history-total-line,
+.history-subtotal-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.history-separator {
+  width: 100%;
+  height: 1px;
+  background-color: rgba(0,0,0,0.1);
+  margin: 10px 0;
+}
+
+.history-names {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.history-name-line {
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.history-breakdown {
+  color: #666;
+  font-size: 12px;
+}
+
+.history-value-red {
+  color: #e74c3c;
+  font-weight: 700;
+  margin-left: 6px;
+}
+
+
+/* Card header / meta line */
+#full-history-list .card .card-header,
+#history-list .card .card-header {
+  font-size: 13px;
+  color: #556;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+}
+
+/* Card content area - ensure items have small gaps so they don't touch */
+#full-history-list .card .card-content,
+#history-list .card .card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1 1 auto;
+}
+
+/* Card footer / actions */
+#full-history-list .card .card-actions,
+#history-list .card .card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Make delete button smaller and less visually dominant */
+#full-history-list .card button.delete-btn,
+#history-list .card button.delete-btn {
+  padding: 6px 8px;
+  font-size: 13px;
+  border-radius: 8px;
+  border: 1px solid rgba(176, 0, 0, 0.12);
+  background: transparent;
+  color: #b52424;
+  cursor: pointer;
+}
+
+/* Make other card buttons consistent and small */
+#full-history-list .card button,
+#history-list .card button {
+  padding: 6px 10px;
+  font-size: 13px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Hover polish */
+#full-history-list .card:hover,
+#history-list .card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 26px rgba(3, 12, 34, 0.06);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+/* Tighter gaps on very small screens */
+@media (max-width: 420px) {
+  #full-history-list,
+  #history-list {
+    gap: 12px;
+  }
+  #full-history-list .card,
+  #history-list .card {
+    padding: 12px;
+    gap: 8px;
+  }
+}
+
+.step-number {
+  width: 46px;
+  height: 46px;
+  min-width: 46px;   /* NEW */
+  min-height: 46px;  /* NEW */
+  flex-shrink: 0;    /* NEW — prevents oval distortion */
+}
+
+figure.tutorial-fig {
+  margin: 12px auto;
+  text-align: center;
+}
+
+figure.tutorial-fig img {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+
+/* Animation Utilities */
+.fade-slide-in {
+  animation: fadeSlideIn 0.4s ease forwards;
+}
+
+.fade-slide-out {
+  animation: fadeSlideOut 0.3s ease forwards;
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeSlideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+#page-loader {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: white;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+#page-loader.fade-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+#page-loader.hidden {
+  display: none;
+}
+
+.loader-lottie {
+  width: 150px;
+  height: 150px;
+}
