@@ -146,7 +146,7 @@ window.finalizeCalculation = async function (totalOrder, subTotal, discount, tot
   const results = document.getElementById('result-cards-container');
   results.innerHTML = '';
 
-  const checkSum = totals.reduce((a, b) => a + b.sum, 0);
+  const checkSum = totals.reduce((a, b) => a + (Number(b && b.sum) || 0), 0);
 
   // Allow small floating diff but prevent gross mismatches; tolerance of 2 (same as original)
   if (Math.abs(checkSum - subTotal) > 2) {
@@ -154,7 +154,9 @@ window.finalizeCalculation = async function (totalOrder, subTotal, discount, tot
     return false;
   }
 
-  totals.forEach(({ name, sum, items }) => {
+  totals.forEach(({ name, sum = 0, items = [] }) => {
+    name = name || t.noLabel || '';
+    sum = Number(sum) || 0;
     const percent = checkSum === 0 ? 0 : sum / checkSum;
     const vatShare = vat * percent;
     const discountShare = discount * percent;

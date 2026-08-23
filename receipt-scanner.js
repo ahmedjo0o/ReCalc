@@ -420,7 +420,7 @@ window.calculateFromAssignment = async function () {
     byName[person].sum += price;
   });
 
-  const totals = names.map(n => byName[n]);
+  const totals = names.map(n => byName[n] || { name: n, sum: 0, items: [] });
 
   const calcBtn = document.getElementById('assign-calculate-button');
   window.setButtonLoading(calcBtn, true);
