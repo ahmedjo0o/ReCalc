@@ -15,6 +15,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lottie-web@5.9.4/build/player/lottie.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://unpkg.com/tesseract.js@5.0.4/dist/tesseract.min.js"></script>
   
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -70,7 +71,73 @@
       <div id="app-content">
         <h1 id="app-title" class="centered-title"></h1>
 
-        <div id="step1">
+        <!-- STEP 0: choose method -->
+        <div id="step0">
+          <h2 id="step0-title" class="centered-title" style="font-size:1.2rem;"></h2>
+          <div class="method-choice-buttons">
+            <button id="choose-scan-button" class="primary" onclick="chooseMethod('scan')"></button>
+            <button id="choose-manual-button" class="secondary" onclick="chooseMethod('manual')"></button>
+          </div>
+        </div>
+
+        <!-- SCAN STEP: camera capture + OCR extraction (scan flow only) -->
+        <div id="scan-step" style="display: none; margin-top: 10px;">
+          <h2 id="scan-step-title" class="centered-title" style="font-size:1.2rem;"></h2>
+
+          <input type="file" accept="image/*" capture="environment" id="scan-file-camera" style="display:none;">
+          <input type="file" accept="image/*" id="scan-file-upload" style="display:none;">
+
+          <div id="scan-capture-buttons" style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
+            <button type="button" id="scan-camera-button" class="primary" onclick="triggerCameraCapture()"></button>
+            <button type="button" id="scan-upload-button" class="secondary" onclick="triggerUploadCapture()"></button>
+          </div>
+
+          <span id="scan-error-message" class="error-message"></span>
+
+          <div id="scan-preview-wrapper" style="display:none; text-align:center; margin-top:14px;">
+            <img id="scan-preview-img" alt="Receipt preview" style="max-width:100%; max-height:420px; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,0.15);">
+            <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:10px;">
+              <button type="button" id="scan-extract-button" class="primary" onclick="extractReceiptData()"></button>
+              <button type="button" id="scan-retake-button" class="secondary" onclick="retakePhoto()"></button>
+            </div>
+            <div id="scan-loading" style="display:none; margin-top:10px; font-weight:600; color:#004794;"></div>
+          </div>
+
+          <div style="text-align:center; margin-top:10px;">
+            <button type="button" id="scan-manual-fallback-button" class="secondary" onclick="scanManualFallback()" style="font-size:13px;"></button>
+          </div>
+
+          <div id="scan-fields-wrapper" style="display:none; margin-top:14px;">
+            <label for="scan-total-order"><span id="scan-label-total-order" class="red-label"></span></label>
+            <input type="number" id="scan-total-order" step="0.01" style="margin-bottom:10px;">
+            <span id="scan-total-order-error" class="error-message"></span>
+
+            <label for="scan-sub-total" style="margin-top:10px;"><span id="scan-label-sub-total" class="red-label"></span></label>
+            <input type="number" id="scan-sub-total" step="0.01" style="margin-bottom:10px;" oninput="updateScanItemsSum()">
+            <span id="scan-sub-total-error" class="error-message"></span>
+
+            <label for="scan-discount" style="margin-top:10px;"><span id="scan-label-discount"></span></label>
+            <input type="number" id="scan-discount" step="0.01" style="margin-bottom:10px;">
+            <span id="scan-discount-error" class="error-message"></span>
+
+            <h3 id="scan-items-title" style="margin-top:16px;"></h3>
+            <div id="scan-items-container" class="scan-items-container"></div>
+            <button type="button" id="scan-add-item-button" class="secondary" onclick="addScanItemRow()" style="margin-top:8px;"></button>
+
+            <div id="scan-items-sum-row" style="margin-top:12px; font-weight:600;">
+              <span id="scan-items-sum-label"></span>
+            </div>
+            <span id="scan-mismatch-error" class="error-message"></span>
+
+            <div style="margin-top:16px;">
+              <button type="button" id="scan-back-button" class="secondary" onclick="showSection('scan-step','step0')"></button>
+              <button type="button" id="scan-continue-button" class="primary" onclick="scanContinue()"></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 1: number of people & names (used by BOTH flows) -->
+        <div id="step1" style="display: none;">
           <label for="num-people" style="margin-top: 10px;"><span id="label-num-people"></span></label>
           <input type="number" id="num-people" min="1" required style="margin-bottom: 10px;" />
           <span id="num-people-error" class="error-message"></span>
@@ -78,7 +145,39 @@
           <form id="names-form" class="names-container" style="margin-top: 10px;" autocomplete="off" onsubmit="return false;"></form>
 
 		  <span id="person-names-error" class="error-message"></span>
-          <button id="next-button" onclick="goToStep2FromStep1()" style="display: none; margin-top: 10px;"></button>
+          <div style="margin-top:10px;">
+            <button id="back-to-step0-button" class="secondary" onclick="goBackToStep0()"></button>
+            <button id="next-button" onclick="goToStep2FromStep1()" style="display: none;"></button>
+          </div>
+        </div>
+
+        <!-- ASSIGN STEP: assign scanned items to people (scan flow only) -->
+        <div id="assign-step" style="display: none; margin-top: 10px;">
+          <h2 id="assign-step-title" class="centered-title" style="font-size:1.2rem;"></h2>
+          <p id="assign-step-subtitle" style="text-align:center; color:#333; margin-top:-10px;"></p>
+
+          <label for="assign-total-order"><span id="assign-label-total-order" class="red-label"></span></label>
+          <input type="number" id="assign-total-order" step="0.01" style="margin-bottom: 10px;">
+          <span id="assign-total-order-error" class="error-message"></span>
+
+          <label for="assign-sub-total" style="margin-top:10px;"><span id="assign-label-sub-total" class="red-label"></span></label>
+          <input type="number" id="assign-sub-total" step="0.01" style="margin-bottom: 10px;">
+          <span id="assign-sub-total-error" class="error-message"></span>
+
+          <label for="assign-discount" style="margin-top:10px;"><span id="assign-label-discount"></span></label>
+          <input type="number" id="assign-discount" step="0.01" style="margin-bottom: 10px;">
+          <span id="assign-discount-error" class="error-message"></span>
+
+          <div id="assign-items-container" class="assign-items-container" style="margin-top:15px;"></div>
+          <button type="button" id="assign-add-item-button" class="secondary" onclick="addAssignItemRow()" style="margin-top:8px;"></button>
+
+          <span id="assign-unassigned-error" class="error-message"></span>
+          <span id="assign-mismatch-error-message" class="error-message"></span>
+
+          <div style="margin-top:16px;">
+            <button type="button" id="assign-back-button" class="secondary" onclick="showSection('assign-step','step1')"></button>
+            <button type="button" id="assign-calculate-button" class="primary" onclick="calculateFromAssignment()"></button>
+          </div>
         </div>
 
         <div id="step2and3" style="display: none; margin-top: 20px;">
@@ -209,6 +308,7 @@
 	<script src="translations.js"></script>
   <script src="https://unpkg.com/html-to-image@1.11.11/dist/html-to-image.umd.js"></script>
 	<script src="calculator.js"></script>
+	<script src="receipt-scanner.js"></script>
 	<script src="main.js"></script>
 
   <script>

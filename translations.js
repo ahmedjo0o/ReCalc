@@ -79,8 +79,35 @@ window.translations = {
     alertLocalHistoryDeleted: 'All local history has been deleted.',
     alertConfirmDeleteOne: 'Are you sure you want to delete this calculation?',
     backToBlogButton: 'العودة للمدونة / Back to Blog ←',
-    backToIndexButton: 'الرئيسية / Home ←'
+    backToIndexButton: 'الرئيسية / Home ←',
 
+    // --- Receipt scanning / assignment flow ---
+    chooseMethodTitle: 'How would you like to split the bill?',
+    scanMethodButton: '📷 Scan Receipt',
+    manualMethodButton: '✍️ Enter Manually',
+    scanStepTitle: 'Scan Your Receipt',
+    takePhotoButton: '📷 Take Photo',
+    uploadPhotoButton: '🖼️ Upload Photo',
+    retakePhotoButton: 'Retake / Choose Another',
+    extractButton: 'Extract Data',
+    extractingMessage: 'Reading your receipt… this can take a few seconds.',
+    ocrFailedError: 'Could not read the receipt automatically. Please check/enter the values below.',
+    scanManualFallbackButton: "Can't scan? Enter values manually",
+    scanItemsTitle: 'Items Found on Receipt',
+    addItemButton: '+ Add Item',
+    itemNamePlaceholder: 'Item name',
+    itemPricePlaceholder: 'Price',
+    continueButton: 'Continue',
+    noItemsFoundMessage: 'No items detected — add them manually below.',
+    assignStepTitle: 'Assign Items to Each Person',
+    assignStepSubtitle: 'Choose who ordered each item. Totals are taken from your scanned receipt.',
+    choosePersonPlaceholder: '-- Choose person --',
+    unassignedError: 'Please assign every item to a person before calculating.',
+    removeButton: 'Remove',
+    backToStart: '← Back',
+    cameraNotSupported: 'Camera capture is not supported on this device/browser. Please use "Upload Photo" instead.',
+    itemsSumLabel: 'Items total',
+    itemsMismatchError: "The items total doesn't match the Sub-Total. Please review the extracted values and items to make sure they match your receipt before continuing."
   },
   ar: {
     pageTitle: 'reCalc - احسب فاتورتك مع أصدقائك',
@@ -159,8 +186,35 @@ window.translations = {
     alertLocalHistoryDeleted: 'تم حذف كل السجل المحلي.',
     alertConfirmDeleteOne: 'هل أنت متأكد أنك تريد حذف هذه العملية الحسابية؟',
     backToBlogButton: 'العودة للمدونة / Back to Blog ←',
-    backToIndexButton: 'الرئيسية / Home ←'
+    backToIndexButton: 'الرئيسية / Home ←',
 
+    // --- خطوات مسح الفاتورة وتوزيع الأصناف ---
+    chooseMethodTitle: 'كيف تريد تقسيم الفاتورة؟',
+    scanMethodButton: '📷 مسح الفاتورة',
+    manualMethodButton: '✍️ إدخال يدوي',
+    scanStepTitle: 'امسح فاتورتك',
+    takePhotoButton: '📷 التقط صورة',
+    uploadPhotoButton: '🖼️ رفع صورة',
+    retakePhotoButton: 'إعادة الالتقاط / اختيار صورة أخرى',
+    extractButton: 'استخراج البيانات',
+    extractingMessage: 'جاري قراءة الفاتورة… قد يستغرق ذلك بضع ثوانٍ.',
+    ocrFailedError: 'تعذّرت قراءة الفاتورة تلقائيًا. يرجى التحقق من القيم أدناه أو إدخالها يدويًا.',
+    scanManualFallbackButton: 'لا يمكنك المسح؟ أدخل القيم يدويًا',
+    scanItemsTitle: 'الأصناف الموجودة في الفاتورة',
+    addItemButton: '+ إضافة صنف',
+    itemNamePlaceholder: 'اسم الصنف',
+    itemPricePlaceholder: 'السعر',
+    continueButton: 'متابعة',
+    noItemsFoundMessage: 'لم يتم العثور على أصناف — أضفها يدويًا أدناه.',
+    assignStepTitle: 'وزّع الأصناف على كل شخص',
+    assignStepSubtitle: 'اختر من طلب كل صنف. الإجماليات مأخوذة من فاتورتك الممسوحة.',
+    choosePersonPlaceholder: '-- اختر شخصًا --',
+    unassignedError: 'يرجى تعيين كل صنف لشخص قبل الحساب.',
+    removeButton: 'حذف',
+    backToStart: '← رجوع',
+    cameraNotSupported: 'التقاط الصور بالكاميرا غير مدعوم على هذا الجهاز/المتصفح. يرجى استخدام "رفع صورة" بدلاً من ذلك.',
+    itemsSumLabel: 'إجمالي الأصناف',
+    itemsMismatchError: 'إجمالي الأصناف لا يطابق (المجموع الفرعي). يرجى مراجعة القيم والأصناف المستخرجة والتأكد من مطابقتها لفاتورتك قبل المتابعة.'
   }
 };
 
@@ -225,6 +279,39 @@ window.setLanguage = function (lang) {
     setIfExists('delete-all-btn', t.deleteAllHistoryButton);
     setIfExists('back-to-blog-btn', t.backToBlogButton);
     setIfExists('back-to-index-btn', t.backToIndexButton);
+
+    // --- Receipt scanning / assignment flow ---
+    setIfExists('step0-title', t.chooseMethodTitle);
+    setIfExists('choose-scan-button', t.scanMethodButton);
+    setIfExists('choose-manual-button', t.manualMethodButton);
+    setIfExists('scan-step-title', t.scanStepTitle);
+    setIfExists('scan-camera-button', t.takePhotoButton);
+    setIfExists('scan-upload-button', t.uploadPhotoButton);
+    setIfExists('scan-retake-button', t.retakePhotoButton);
+    setIfExists('scan-extract-button', t.extractButton);
+    setIfExists('scan-loading', t.extractingMessage);
+    setIfExists('scan-manual-fallback-button', t.scanManualFallbackButton);
+    setIfExists('scan-items-title', t.scanItemsTitle);
+    setIfExists('scan-add-item-button', t.addItemButton);
+    setIfExists('scan-continue-button', t.continueButton);
+    setIfExists('scan-back-button', t.backToStart);
+    setIfExists('scan-label-total-order', t.totalOrder);
+    setIfExists('scan-label-sub-total', t.subTotal);
+    setIfExists('scan-label-discount', t.discount);
+    setIfExists('back-to-step0-button', t.backToStart);
+    setIfExists('assign-step-title', t.assignStepTitle);
+    setIfExists('assign-step-subtitle', t.assignStepSubtitle);
+    setIfExists('assign-label-total-order', t.totalOrder);
+    setIfExists('assign-label-sub-total', t.subTotal);
+    setIfExists('assign-label-discount', t.discount);
+    setIfExists('assign-add-item-button', t.addItemButton);
+    setIfExists('assign-back-button', t.backButton);
+    setIfExists('assign-calculate-button', t.calculateButton);
+    document.querySelectorAll('.scan-item-remove, .assign-item-remove').forEach(btn => btn.innerText = t.removeButton);
+    document.querySelectorAll('.assign-person-select option[value=""]').forEach(opt => opt.innerText = t.choosePersonPlaceholder);
+    document.querySelectorAll('.item-name-input').forEach(inp => inp.placeholder = t.itemNamePlaceholder);
+    document.querySelectorAll('.item-price-input').forEach(inp => inp.placeholder = t.itemPricePlaceholder);
+    if (typeof window.updateScanItemsSum === 'function') window.updateScanItemsSum();
 
     // auth modal / auth button
     const authBtn = document.getElementById('auth-button');

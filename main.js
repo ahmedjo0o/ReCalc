@@ -419,16 +419,35 @@ window.goToStep2FromStep1 = function () {
 	  return;
   }
 
-  generateOrderCards();
-  showSection('step1', 'step2and3');
+  if (window.appFlow === 'scan' && typeof window.buildAssignStep === 'function') {
+    window.buildAssignStep();
+    showSection('step1', 'assign-step');
+  } else {
+    generateOrderCards();
+    showSection('step1', 'step2and3');
+  }
 }
 
 window.goToStep2 = function () {
-  showSection('result', 'step2and3');
+  if (window.appFlow === 'scan') {
+    showSection('result', 'assign-step');
+  } else {
+    showSection('result', 'step2and3');
+  }
 }
 
 window.goBackToStep1 = function () {
   showSection('step2and3', 'step1');
+};
+
+// Back from step1 (names) to wherever the person came from: the method
+// choice screen for the manual flow, or the scan step for the scan flow.
+window.goBackToStep0 = function () {
+  if (window.appFlow === 'scan') {
+    showSection('step1', 'scan-step');
+  } else {
+    showSection('step1', 'step0');
+  }
 };
 
 window.startAgain = function () {
