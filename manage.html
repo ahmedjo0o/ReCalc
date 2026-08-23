@@ -104,6 +104,18 @@
   <script src="firebase.js"></script>
   <script>
   // ---------- Manage page helpers (PROFILE, HISTORY, FAVORITES) ----------
+  // Safe accessor: never throws even if Firebase failed to load/init,
+  // so history/favorites always fall back to local/guest mode instead
+  // of getting stuck on "Loading...".
+  function safeCurrentUser() {
+    try {
+      if (typeof firebase === 'undefined' || !firebase.apps || !firebase.apps.length) return null;
+      return firebase.auth().currentUser;
+    } catch (e) {
+      return null;
+    }
+  }
+
   // reload helper
   function reloadAll() {
     loadProfile();
@@ -113,7 +125,7 @@
 
 // PROFILE: show current displayName if present
   async function loadProfile() {
-    const user = firebase.auth().currentUser;
+    const user = safeCurrentUser();
     const el = document.getElementById('manage-displayname-input');
     const msg = document.getElementById('manage-profile-message');
     
@@ -162,7 +174,7 @@
   }
 
 async function saveDisplayName() {
-  const user = firebase.auth().currentUser;
+  const user = safeCurrentUser();
   const val = document.getElementById('manage-displayname-input').value.trim();
   const msg = document.getElementById('manage-profile-message');
   if (msg) msg.innerText = '';
@@ -178,7 +190,7 @@ async function saveDisplayName() {
 
     // ✅ Fix: Only update UI if updateAuthUI and .auth-area exist
     if (window.updateAuthUI && document.querySelector('.auth-area')) {
-      window.updateAuthUI(firebase.auth().currentUser);
+      window.updateAuthUI(safeCurrentUser());
     }
 
   } catch (err) {
@@ -189,7 +201,7 @@ async function saveDisplayName() {
 
   // CHANGE PASSWORD: unchanged logic (kept from original file)
   async function changePassword() {
-    const user = firebase.auth().currentUser;
+    const user = safeCurrentUser();
     const cur = document.getElementById('manage-current-password').value;
     const neu = document.getElementById('manage-new-password').value;
     const msg = document.getElementById('manage-profile-message');
@@ -346,7 +358,7 @@ async function saveDisplayName() {
     if (!list) return;
     list.innerHTML = 'Loading...';
     try {
-      const user = firebase.auth().currentUser;
+      const user = safeCurrentUser();
       let items = [];
       if (user && user.uid) {
         // fetch 3 latest directly from Firestore
@@ -371,7 +383,7 @@ async function saveDisplayName() {
     if (!confirm(confirmMsg)) return;
     
     try {
-      const user = firebase.auth().currentUser;
+      const user = safeCurrentUser();
       if (user && user.uid && docId) {
         await window.deleteHistoryItem(user.uid, docId);
       } else {
@@ -423,7 +435,7 @@ async function saveDisplayName() {
     const root = document.getElementById('manage-favs-root');
     if (root) root.innerHTML = 'Loading...';
     try {
-      const user = firebase.auth().currentUser;
+      const user = safeCurrentUser();
       let favs = [];
       if (user && user.uid) favs = await window.getFavorites(user.uid);
       else favs = window.localGetFavorites().map(f => ({ id: f.name, name: f.name }));
@@ -438,7 +450,7 @@ async function saveDisplayName() {
     const name = (input.value || '').trim();
     if (!name) return alert('Enter a name');
     try {
-      const user = firebase.auth().currentUser;
+      const user = safeCurrentUser();
       if (user && user.uid) {
         await window.addFavorite(user.uid, { name });
       } else {
@@ -457,7 +469,7 @@ async function saveDisplayName() {
     const newName = (input.value || '').trim();
     if (!newName) return alert('Name cannot be empty');
     try {
-      const user = firebase.auth().currentUser;
+      const user = safeCurrentUser();
       if (user && user.uid && id) {
         await window.updateFavorite(user.uid, id, { name: newName });
       } else {
@@ -473,7 +485,7 @@ async function saveDisplayName() {
   async function confirmDeleteFav(id, name) {
     if (!confirm('Delete this favorite?')) return;
     try {
-      const user = firebase.auth().currentUser;
+      const user = safeCurrentUser();
       if (user && user.uid && id) await window.deleteFavorite(user.uid, id);
       else window.localDeleteFavorite(name);
       loadFavorites();

@@ -406,26 +406,32 @@ window.calculateFromAssignment = async function () {
     return;
   }
 
-  // Group items by person; every named person gets an entry (even with 0 items).
+  // Group items by person, defaulting every named person to an entry (even 0 items).
   const byName = {};
-  names.forEach(n => { byName[n] = { name: n, items: [] }; });
+  names.forEach(n => { byName[n] = { name: n, sum: 0, items: [] }; });
 
   rows.forEach(row => {
     const label = row.querySelector('.item-name-input').value.trim() || (translations[currentLanguage].noLabel || 'No-Label');
     const price = parseFloat(row.querySelector('.item-price-input').value) || 0;
     const person = row.querySelector('.assign-person-select').value;
     if (!person || price === 0) return;
-    if (!byName[person]) byName[person] = { name: person, items: [] };
+    if (!byName[person]) byName[person] = { name: person, sum: 0, items: [] };
     byName[person].items.push({ label, price });
+    byName[person].sum += price;
   });
 
   const totals = names.map(n => byName[n]);
 
-  await window.finalizeCalculation(totalOrder, subTotal, discount, totals, {
-    mismatchErrorId: 'assign-mismatch-error-message',
-    hideStepId: 'assign-step',
-    calcButtonId: 'assign-calculate-button'
-  });
+  const calcBtn = document.getElementById('assign-calculate-button');
+  window.setButtonLoading(calcBtn, true);
+  try {
+    await window.finalizeCalculation(totalOrder, subTotal, discount, totals, {
+      mismatchErrorId: 'assign-mismatch-error-message',
+      hideStepId: 'assign-step'
+    });
+  } finally {
+    window.setButtonLoading(calcBtn, false);
+  }
 };
 
 // ---------------------------------------------------------------------

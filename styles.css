@@ -48,7 +48,7 @@ body[dir="ltr"] {
 }
 
 #howto-button { min-width: 160px; }
-#howto-button-wrapper { margin-bottom: 8px; }
+#howto-button-wrapper { margin-bottom: 0; }
 
 
 /* This is the "glass" container style, now scoped to index.html via #page-wrapper */
@@ -647,6 +647,36 @@ button.secondary { background: #f0f4f8; color: #003049; padding: 10px 14px; bord
     margin-right: 5px;
 }
 
+/* ---------- Button loading / spinner state (e.g. Calculate while waiting on backend) ---------- */
+button.btn-loading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.85;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.btn-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  margin-inline-end: 8px;
+  vertical-align: middle;
+  animation: btnSpin 0.7s linear infinite;
+}
+
+.btn-loading-text {
+  vertical-align: middle;
+}
+
+@keyframes btnSpin {
+  to { transform: rotate(360deg); }
+}
+
 .card-total {
     color: green;
     font-size: 0.85em;
@@ -718,7 +748,7 @@ footer a:hover {
 
 .coffee-button-wrapper {
   text-align: center;
-  margin: 30px 0 10px; /* فوق الفوتر مباشرة */
+  margin: 4px 0 10px; /* فوق الفوتر مباشرة */
 }
 
 .coffee-button img {

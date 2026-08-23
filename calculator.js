@@ -35,6 +35,27 @@ function escapeHtml(s = '') {
                    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
+// --- Reusable button loading/spinner state (used while the Cloud Function /
+// --- Firestore save is in flight, since that can take a moment). ---
+window.setButtonLoading = function (button, isLoading, loadingText) {
+  if (!button) return;
+  if (isLoading) {
+    if (button.dataset.originalHtml === undefined) {
+      button.dataset.originalHtml = button.innerHTML;
+    }
+    button.disabled = true;
+    button.classList.add('btn-loading');
+    const label = loadingText || (translations[currentLanguage]?.calculatingButton || 'Calculating…');
+    button.innerHTML = `<span class="btn-spinner" aria-hidden="true"></span><span class="btn-loading-text">${escapeHtml(label)}</span>`;
+  } else {
+    button.disabled = false;
+    button.classList.remove('btn-loading');
+    if (button.dataset.originalHtml !== undefined) {
+      button.innerHTML = button.dataset.originalHtml;
+    }
+  }
+};
+
 // update subtotal (sums only numeric values)
 window.updateSubtotal = function (input) {
   const card = input.closest('.card');
@@ -111,49 +132,35 @@ window.validateBillTotals = function (totalOrderValue, subTotalValue, discountVa
   return { totalOrder, subTotal, discount };
 };
 
-// --- Shared core: given already-validated totals + a per-person items array
-// --- ({ name, items:[{label,price}] }), send them to the calculateBill Cloud
-// --- Function for the authoritative split calculation (and, for signed-in
-// --- users, the history write), then render the returned result cards.
-// --- opts: { mismatchErrorId, hideStepId, calcButtonId }
+// --- Shared core: given totals (already validated) + a per-person totals array
+// --- ({ name, sum, items:[{label,price}] }), check the sums match, render the
+// --- result cards, persist the calculation, and reveal the result section.
+// --- opts: { mismatchErrorId, hideStepId }
 window.finalizeCalculation = async function (totalOrder, subTotal, discount, totals, opts) {
   opts = opts || {};
   const mismatchErrorId = opts.mismatchErrorId || 'mismatch-error-message';
   const hideStepId = opts.hideStepId || 'step2and3';
-  const calcButton = opts.calcButtonId ? document.getElementById(opts.calcButtonId) : null;
   const t = translations[currentLanguage];
 
-  if (calcButton) calcButton.disabled = true;
+  const vat = totalOrder - subTotal;
+  const results = document.getElementById('result-cards-container');
+  results.innerHTML = '';
 
-  let response;
-  try {
-    response = await window.callCalculateBill({
-      totalOrder,
-      subTotal,
-      discount,
-      totals,
-      localeLang: currentLanguage,
-      source: window.appFlow === 'scan' ? 'scan' : 'manual'
-    });
-  } catch (err) {
-    console.error('calculateBill failed:', err);
-    if (calcButton) calcButton.disabled = false;
-    if (err && err.code === 'functions/failed-precondition') {
-      showError(mismatchErrorId, t.mismatchError);
-    } else {
-      showError(mismatchErrorId, t.calcServerError || 'Could not reach the server. Please check your connection and try again.');
-    }
+  const checkSum = totals.reduce((a, b) => a + b.sum, 0);
+
+  // Allow small floating diff but prevent gross mismatches; tolerance of 2 (same as original)
+  if (Math.abs(checkSum - subTotal) > 2) {
+    showError(mismatchErrorId, t.mismatchError);
     return false;
   }
-  if (calcButton) calcButton.disabled = false;
 
-  const { results, vat } = response.data;
+  totals.forEach(({ name, sum, items }) => {
+    const percent = checkSum === 0 ? 0 : sum / checkSum;
+    const vatShare = vat * percent;
+    const discountShare = discount * percent;
+    const totalPay = sum + vatShare - discountShare;
 
-  const resultsContainer = document.getElementById('result-cards-container');
-  resultsContainer.innerHTML = '';
-
-  results.forEach(({ name, sum, items, vatShare, discountShare, totalPay }) => {
-    const breakdownHtml = (items || []).map(it => {
+    const breakdownHtml = items.map(it => {
       const labelText = (it.label && it.label.trim()) ? escapeHtml(it.label) : (t?.noLabel || 'No-Label');
       return `<div style="font-size:13px;">${labelText}: ${Number(it.price || 0).toFixed(2)}</div>`;
     }).join('');
@@ -162,10 +169,10 @@ window.finalizeCalculation = async function (totalOrder, subTotal, discount, tot
     card.classList.add('card', 'fade-slide-in');
     card.innerHTML = `
       <div class="card-header">${escapeHtml(name)}</div>
-      <div class="card-content">${t.order}: ${Number(sum).toFixed(2)}</div>
-      <div class="card-content">${t.vat}: ${Number(vatShare).toFixed(2)}</div>
-      <div class="card-content">${t.discount.replace(/\s*\(.*\)/, '')} ${Number(discountShare).toFixed(2)}</div>
-      <div class="card-content total-to-pay"><strong>${t.totalToPay}: ${Number(totalPay).toFixed(2)}</strong></div>
+      <div class="card-content">${t.order}: ${sum.toFixed(2)}</div>
+      <div class="card-content">${t.vat}: ${vatShare.toFixed(2)}</div>
+      <div class="card-content">${t.discount.replace(/\s*\(.*\)/, '')} ${discountShare.toFixed(2)}</div>
+      <div class="card-content total-to-pay"><strong>${t.totalToPay}: ${totalPay.toFixed(2)}</strong></div>
       <div class="card-details" style="margin-top:8px; font-size:13px;"><strong class="details-label">${t.details}</strong>
           ${breakdownHtml || `<div style="font-size:13px;color:#666;margin-top:4px;">${t.noLabel}</div>`}
       </div>
@@ -177,28 +184,33 @@ window.finalizeCalculation = async function (totalOrder, subTotal, discount, tot
         </svg>
       </button>
     `;
-    resultsContainer.appendChild(card);
+    results.appendChild(card);
   });
 
-  // The Cloud Function already saved history to Firestore for signed-in users.
-  // For anonymous users (no server-side write happens), fall back to local
-  // storage exactly as before, using the server's computed numbers.
   try {
-    if (!(window.currentUser && window.currentUser.uid)) {
-      localSaveCalculation({
-        createdAt: new Date().toISOString(),
-        totalOrder,
-        subTotal,
-        discount,
-        vat,
-        totals: results,
-        resultsSummary: results.map(r => ({ name: r.name, sum: r.sum })),
-        localeLang: currentLanguage,
-        source: window.appFlow === 'scan' ? 'scan' : 'manual'
-      });
+    const calcToSave = {
+      createdAt: (firebase && firebase.firestore && firebase.firestore.FieldValue)
+                  ? firebase.firestore.FieldValue.serverTimestamp()
+                  : new Date().toISOString(),
+      totalOrder,
+      subTotal,
+      discount,
+      vat,
+      totals,
+      resultsSummary: totals.map(tt => ({ name: tt.name, sum: tt.sum })),
+      localeLang: currentLanguage,
+      source: window.appFlow === 'scan' ? 'scan' : 'manual'
+    };
+
+    if (window.currentUser && window.currentUser.uid) {
+      // Await this: it's the backend round-trip, so the Calculate button's
+      // spinner stays visible for the actual duration of the save.
+      await saveCalculationToFirestore(window.currentUser.uid, calcToSave).catch(err => console.warn('save calc', err));
+    } else {
+      localSaveCalculation({ ...calcToSave, createdAt: new Date().toISOString() });
     }
   } catch (err) {
-    console.warn('Could not save calculation locally:', err);
+    console.warn('Could not save calculation:', err);
   }
 
   const hideStepEl = document.getElementById(hideStepId);
@@ -208,9 +220,8 @@ window.finalizeCalculation = async function (totalOrder, subTotal, discount, tot
   return true;
 };
 
-// --- calculateVAT: manual flow (step2and3). Builds the per-person items list
-// --- from the order cards and hands it to finalizeCalculation, which sends
-// --- it to the Cloud Function for the authoritative computation. ---
+// --- calculateVAT: manual flow (step2and3). Builds totals from the order cards
+// --- and delegates the actual computation/rendering to finalizeCalculation. ---
 window.calculateVAT = async function () {
   const validated = window.validateBillTotals(
     document.getElementById('total-order').value,
@@ -236,99 +247,117 @@ window.calculateVAT = async function () {
       return { label, price };
     }).filter(i => i.price !== 0);
 
-    return { name, items };
+    const sum = items.reduce((s, it) => s + (Number(it.price) || 0), 0);
+    return { name, sum, items };
   });
 
-  await window.finalizeCalculation(totalOrder, subTotal, discount, totals, {
-    mismatchErrorId: 'mismatch-error-message',
-    hideStepId: 'step2and3',
-    calcButtonId: 'calculate-button'
+  const calcBtn = document.getElementById('calculate-button');
+  window.setButtonLoading(calcBtn, true);
+  try {
+    await window.finalizeCalculation(totalOrder, subTotal, discount, totals, {
+      mismatchErrorId: 'mismatch-error-message',
+      hideStepId: 'step2and3'
+    });
+  } finally {
+    window.setButtonLoading(calcBtn, false);
+  }
+}
+
+// --- Stylized, high-resolution export ---------------------------------
+// Builds an off-screen wrapper that mirrors reCalc's brand look (gradient
+// background, logo header, clean opaque cards, footer), renders it via
+// html2canvas at 2x+ scale for crisp quality, then shares/downloads it.
+// Cloning the card(s) (rather than screenshotting the live DOM) means we
+// never have to fight backdrop-filter/blur or toggle animation classes.
+function buildExportWrapper(cardNodes) {
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = `
+    position: fixed;
+    left: -9999px;
+    top: 0;
+    width: 640px;
+    padding: 32px 28px;
+    background: linear-gradient(135deg, #80c1b5, #4e81b3);
+    font-family: 'Cairo', sans-serif;
+    box-sizing: border-box;
+  `;
+
+  const header = document.createElement('div');
+  header.style.cssText = 'text-align:center; margin-bottom:22px;';
+  header.innerHTML = `
+    <div style="font-size:28px; font-weight:800; color:#ffffff; letter-spacing:0.5px; text-shadow:0 2px 6px rgba(0,0,0,0.18);">reCalc</div>
+    <div style="font-size:13px; color:rgba(255,255,255,0.9); margin-top:4px;">${escapeHtml(new Date().toLocaleDateString(currentLanguage === 'ar' ? 'ar' : 'en'))}</div>
+  `;
+  wrapper.appendChild(header);
+
+  const grid = document.createElement('div');
+  grid.style.cssText = 'display:flex; flex-direction:column; gap:16px;';
+
+  cardNodes.forEach(originalCard => {
+    const clone = originalCard.cloneNode(true);
+    const shareBtn = clone.querySelector('.share-button');
+    if (shareBtn) shareBtn.remove();
+    clone.classList.remove('fade-slide-in', 'fade-slide-out');
+    clone.style.cssText = `
+      background: #ffffff;
+      border: 1px solid rgba(0,0,0,0.06);
+      border-radius: 14px;
+      box-shadow: 0 10px 24px rgba(0,20,50,0.18);
+      padding: 16px 18px;
+      margin: 0;
+    `;
+    grid.appendChild(clone);
   });
+  wrapper.appendChild(grid);
+
+  const footer = document.createElement('div');
+  footer.style.cssText = 'text-align:center; margin-top:22px; font-size:12px; color:rgba(255,255,255,0.9); letter-spacing:0.3px;';
+  footer.innerText = 're-calc.com';
+  wrapper.appendChild(footer);
+
+  return wrapper;
+}
+
+function exportCardsAsImage(cardNodes, filename, shareTitle, shareText) {
+  if (!cardNodes || !cardNodes.length) return;
+  const wrapper = buildExportWrapper(cardNodes);
+  document.body.appendChild(wrapper);
+
+  // Small delay so the cloned DOM/fonts settle before rasterizing.
+  setTimeout(() => {
+    html2canvas(wrapper, {
+      backgroundColor: null,
+      useCORS: true,
+      scale: Math.max(2, window.devicePixelRatio || 2) // high-quality export
+    }).then(canvas => {
+      wrapper.remove();
+      canvas.toBlob(blob => {
+        const file = new File([blob], filename, { type: 'image/png' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          navigator.share({ files: [file], title: shareTitle, text: shareText }).catch(console.error);
+        } else {
+          const link = document.createElement('a');
+          link.download = filename;
+          link.href = URL.createObjectURL(file);
+          link.click();
+        }
+      });
+    }).catch(err => {
+      wrapper.remove();
+      console.error('html2canvas error:', err);
+    });
+  }, 100);
 }
 
 window.shareCard = function (btn) {
   const card = btn.closest('.card');
-  const wasAnimated = card.classList.contains('fade-slide-in');
-
-  // 1. Temporarily remove animation class
-  if (wasAnimated) {
-    card.classList.remove('fade-slide-in');
-  }
-
-  // 2. Add a small delay for DOM to update
-  setTimeout(() => {
-    html2canvas(card, { 
-      backgroundColor: '#ffffff', // 3. Keep background color fix
-      useCORS: true 
-    }).then(canvas => {
-      // 4. Add class back after capture
-      if (wasAnimated) {
-        card.classList.add('fade-slide-in');
-      }
-
-      canvas.toBlob(blob => {
-        const file = new File([blob], "card.png", { type: "image/png" });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          navigator.share({
-            files: [file],
-            title: 'Your Bill',
-            text: 'Individual Bill Breakdown'
-          }).catch(console.error);
-        } else {
-          const link = document.createElement('a');
-          link.download = "card.png";
-          link.href = URL.createObjectURL(file);
-          link.click();
-        }
-      });
-    }).catch(err => {
-      // 4. Also add class back on error
-      if (wasAnimated) {
-        card.classList.add('fade-slide-in');
-      }
-      console.error("html2canvas error:", err);
-    });
-  }, 100); // 100ms delay
+  exportCardsAsImage([card], 'recalc-bill.png', 'Your Bill', 'Individual Bill Breakdown');
 }
 
 window.shareFullResult = function () {
   const resultContainer = document.getElementById('result-cards-container');
-  // Find all cards that have the animation class
-  const cards = resultContainer.querySelectorAll('.card.fade-slide-in');
-
-  // 1. Temporarily remove animation class from all children
-  cards.forEach(card => card.classList.remove('fade-slide-in'));
-
-  // 2. Add a small delay for DOM to update
-  setTimeout(() => {
-    html2canvas(resultContainer, { 
-      backgroundColor: '#ffffff', // 3. Keep background color fix
-      useCORS: true 
-    }).then(canvas => {
-      // 4. Add classes back after capture
-      cards.forEach(card => card.classList.add('fade-slide-in'));
-
-      canvas.toBlob(blob => {
-        const file = new File([blob], "full-results.png", { type: "image/png" });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          navigator.share({
-            files: [file],
-            title: 'Receipt Results',
-            text: 'Here is the full receipt breakdown'
-          }).catch(console.error);
-        } else {
-          const link = document.createElement('a');
-          link.download = "full-results.png";
-          link.href = URL.createObjectURL(file);
-          link.click();
-        }
-      });
-    }).catch(err => {
-      // 4. Also add classes back on error
-      cards.forEach(card => card.classList.add('fade-slide-in'));
-      console.error("html2canvas error:", err);
-    });
-  }, 100); // 100ms delay
+  const cards = [...resultContainer.querySelectorAll('.card')];
+  exportCardsAsImage(cards, 'recalc-full-results.png', 'Receipt Results', 'Here is the full receipt breakdown');
 }
 function escapeForJS(s) {
   return s.replace(/'/g, "\\'").replace(/"/g, '\\"');
