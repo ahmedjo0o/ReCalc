@@ -382,7 +382,7 @@ window.addAssignItemRow = function (label = '', price = '', assignedTo = '') {
   container.appendChild(row);
 };
 
-window.calculateFromAssignment = function () {
+window.calculateFromAssignment = async function () {
   const validated = window.validateBillTotals(
     document.getElementById('assign-total-order').value,
     document.getElementById('assign-sub-total').value,
@@ -406,25 +406,25 @@ window.calculateFromAssignment = function () {
     return;
   }
 
-  // Group items by person, defaulting every named person to an entry (even 0 items).
+  // Group items by person; every named person gets an entry (even with 0 items).
   const byName = {};
-  names.forEach(n => { byName[n] = { name: n, sum: 0, items: [] }; });
+  names.forEach(n => { byName[n] = { name: n, items: [] }; });
 
   rows.forEach(row => {
     const label = row.querySelector('.item-name-input').value.trim() || (translations[currentLanguage].noLabel || 'No-Label');
     const price = parseFloat(row.querySelector('.item-price-input').value) || 0;
     const person = row.querySelector('.assign-person-select').value;
     if (!person || price === 0) return;
-    if (!byName[person]) byName[person] = { name: person, sum: 0, items: [] };
+    if (!byName[person]) byName[person] = { name: person, items: [] };
     byName[person].items.push({ label, price });
-    byName[person].sum += price;
   });
 
   const totals = names.map(n => byName[n]);
 
-  window.finalizeCalculation(totalOrder, subTotal, discount, totals, {
+  await window.finalizeCalculation(totalOrder, subTotal, discount, totals, {
     mismatchErrorId: 'assign-mismatch-error-message',
-    hideStepId: 'assign-step'
+    hideStepId: 'assign-step',
+    calcButtonId: 'assign-calculate-button'
   });
 };
 

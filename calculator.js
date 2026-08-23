@@ -111,35 +111,49 @@ window.validateBillTotals = function (totalOrderValue, subTotalValue, discountVa
   return { totalOrder, subTotal, discount };
 };
 
-// --- Shared core: given totals (already validated) + a per-person totals array
-// --- ({ name, sum, items:[{label,price}] }), check the sums match, render the
-// --- result cards, persist the calculation, and reveal the result section.
-// --- opts: { mismatchErrorId, hideStepId }
-window.finalizeCalculation = function (totalOrder, subTotal, discount, totals, opts) {
+// --- Shared core: given already-validated totals + a per-person items array
+// --- ({ name, items:[{label,price}] }), send them to the calculateBill Cloud
+// --- Function for the authoritative split calculation (and, for signed-in
+// --- users, the history write), then render the returned result cards.
+// --- opts: { mismatchErrorId, hideStepId, calcButtonId }
+window.finalizeCalculation = async function (totalOrder, subTotal, discount, totals, opts) {
   opts = opts || {};
   const mismatchErrorId = opts.mismatchErrorId || 'mismatch-error-message';
   const hideStepId = opts.hideStepId || 'step2and3';
+  const calcButton = opts.calcButtonId ? document.getElementById(opts.calcButtonId) : null;
   const t = translations[currentLanguage];
 
-  const vat = totalOrder - subTotal;
-  const results = document.getElementById('result-cards-container');
-  results.innerHTML = '';
+  if (calcButton) calcButton.disabled = true;
 
-  const checkSum = totals.reduce((a, b) => a + b.sum, 0);
-
-  // Allow small floating diff but prevent gross mismatches; tolerance of 2 (same as original)
-  if (Math.abs(checkSum - subTotal) > 2) {
-    showError(mismatchErrorId, t.mismatchError);
+  let response;
+  try {
+    response = await window.callCalculateBill({
+      totalOrder,
+      subTotal,
+      discount,
+      totals,
+      localeLang: currentLanguage,
+      source: window.appFlow === 'scan' ? 'scan' : 'manual'
+    });
+  } catch (err) {
+    console.error('calculateBill failed:', err);
+    if (calcButton) calcButton.disabled = false;
+    if (err && err.code === 'functions/failed-precondition') {
+      showError(mismatchErrorId, t.mismatchError);
+    } else {
+      showError(mismatchErrorId, t.calcServerError || 'Could not reach the server. Please check your connection and try again.');
+    }
     return false;
   }
+  if (calcButton) calcButton.disabled = false;
 
-  totals.forEach(({ name, sum, items }) => {
-    const percent = checkSum === 0 ? 0 : sum / checkSum;
-    const vatShare = vat * percent;
-    const discountShare = discount * percent;
-    const totalPay = sum + vatShare - discountShare;
+  const { results, vat } = response.data;
 
-    const breakdownHtml = items.map(it => {
+  const resultsContainer = document.getElementById('result-cards-container');
+  resultsContainer.innerHTML = '';
+
+  results.forEach(({ name, sum, items, vatShare, discountShare, totalPay }) => {
+    const breakdownHtml = (items || []).map(it => {
       const labelText = (it.label && it.label.trim()) ? escapeHtml(it.label) : (t?.noLabel || 'No-Label');
       return `<div style="font-size:13px;">${labelText}: ${Number(it.price || 0).toFixed(2)}</div>`;
     }).join('');
@@ -148,10 +162,10 @@ window.finalizeCalculation = function (totalOrder, subTotal, discount, totals, o
     card.classList.add('card', 'fade-slide-in');
     card.innerHTML = `
       <div class="card-header">${escapeHtml(name)}</div>
-      <div class="card-content">${t.order}: ${sum.toFixed(2)}</div>
-      <div class="card-content">${t.vat}: ${vatShare.toFixed(2)}</div>
-      <div class="card-content">${t.discount.replace(/\s*\(.*\)/, '')} ${discountShare.toFixed(2)}</div>
-      <div class="card-content total-to-pay"><strong>${t.totalToPay}: ${totalPay.toFixed(2)}</strong></div>
+      <div class="card-content">${t.order}: ${Number(sum).toFixed(2)}</div>
+      <div class="card-content">${t.vat}: ${Number(vatShare).toFixed(2)}</div>
+      <div class="card-content">${t.discount.replace(/\s*\(.*\)/, '')} ${Number(discountShare).toFixed(2)}</div>
+      <div class="card-content total-to-pay"><strong>${t.totalToPay}: ${Number(totalPay).toFixed(2)}</strong></div>
       <div class="card-details" style="margin-top:8px; font-size:13px;"><strong class="details-label">${t.details}</strong>
           ${breakdownHtml || `<div style="font-size:13px;color:#666;margin-top:4px;">${t.noLabel}</div>`}
       </div>
@@ -163,31 +177,28 @@ window.finalizeCalculation = function (totalOrder, subTotal, discount, totals, o
         </svg>
       </button>
     `;
-    results.appendChild(card);
+    resultsContainer.appendChild(card);
   });
 
+  // The Cloud Function already saved history to Firestore for signed-in users.
+  // For anonymous users (no server-side write happens), fall back to local
+  // storage exactly as before, using the server's computed numbers.
   try {
-    const calcToSave = {
-      createdAt: (firebase && firebase.firestore && firebase.firestore.FieldValue)
-                  ? firebase.firestore.FieldValue.serverTimestamp()
-                  : new Date().toISOString(),
-      totalOrder,
-      subTotal,
-      discount,
-      vat,
-      totals,
-      resultsSummary: totals.map(tt => ({ name: tt.name, sum: tt.sum })),
-      localeLang: currentLanguage,
-      source: window.appFlow === 'scan' ? 'scan' : 'manual'
-    };
-
-    if (window.currentUser && window.currentUser.uid) {
-      saveCalculationToFirestore(window.currentUser.uid, calcToSave).catch(err => console.warn('save calc', err));
-    } else {
-      localSaveCalculation({ ...calcToSave, createdAt: new Date().toISOString() });
+    if (!(window.currentUser && window.currentUser.uid)) {
+      localSaveCalculation({
+        createdAt: new Date().toISOString(),
+        totalOrder,
+        subTotal,
+        discount,
+        vat,
+        totals: results,
+        resultsSummary: results.map(r => ({ name: r.name, sum: r.sum })),
+        localeLang: currentLanguage,
+        source: window.appFlow === 'scan' ? 'scan' : 'manual'
+      });
     }
   } catch (err) {
-    console.warn('Could not save calculation:', err);
+    console.warn('Could not save calculation locally:', err);
   }
 
   const hideStepEl = document.getElementById(hideStepId);
@@ -197,9 +208,10 @@ window.finalizeCalculation = function (totalOrder, subTotal, discount, totals, o
   return true;
 };
 
-// --- calculateVAT: manual flow (step2and3). Builds totals from the order cards
-// --- and delegates the actual computation/rendering to finalizeCalculation. ---
-window.calculateVAT = function () {
+// --- calculateVAT: manual flow (step2and3). Builds the per-person items list
+// --- from the order cards and hands it to finalizeCalculation, which sends
+// --- it to the Cloud Function for the authoritative computation. ---
+window.calculateVAT = async function () {
   const validated = window.validateBillTotals(
     document.getElementById('total-order').value,
     document.getElementById('sub-total').value,
@@ -224,13 +236,13 @@ window.calculateVAT = function () {
       return { label, price };
     }).filter(i => i.price !== 0);
 
-    const sum = items.reduce((s, it) => s + (Number(it.price) || 0), 0);
-    return { name, sum, items };
+    return { name, items };
   });
 
-  window.finalizeCalculation(totalOrder, subTotal, discount, totals, {
+  await window.finalizeCalculation(totalOrder, subTotal, discount, totals, {
     mismatchErrorId: 'mismatch-error-message',
-    hideStepId: 'step2and3'
+    hideStepId: 'step2and3',
+    calcButtonId: 'calculate-button'
   });
 }
 

@@ -107,7 +107,8 @@ window.translations = {
     backToStart: '← Back',
     cameraNotSupported: 'Camera capture is not supported on this device/browser. Please use "Upload Photo" instead.',
     itemsSumLabel: 'Items total',
-    itemsMismatchError: "The items total doesn't match the Sub-Total. Please review the extracted values and items to make sure they match your receipt before continuing."
+    itemsMismatchError: "The items total doesn't match the Sub-Total. Please review the extracted values and items to make sure they match your receipt before continuing.",
+    calcServerError: 'Could not reach the server to calculate your split. Please check your connection and try again.'
   },
   ar: {
     pageTitle: 'reCalc - احسب فاتورتك مع أصدقائك',
@@ -214,7 +215,8 @@ window.translations = {
     backToStart: '← رجوع',
     cameraNotSupported: 'التقاط الصور بالكاميرا غير مدعوم على هذا الجهاز/المتصفح. يرجى استخدام "رفع صورة" بدلاً من ذلك.',
     itemsSumLabel: 'إجمالي الأصناف',
-    itemsMismatchError: 'إجمالي الأصناف لا يطابق (المجموع الفرعي). يرجى مراجعة القيم والأصناف المستخرجة والتأكد من مطابقتها لفاتورتك قبل المتابعة.'
+    itemsMismatchError: 'إجمالي الأصناف لا يطابق (المجموع الفرعي). يرجى مراجعة القيم والأصناف المستخرجة والتأكد من مطابقتها لفاتورتك قبل المتابعة.',
+    calcServerError: 'تعذّر الاتصال بالخادم لحساب توزيع الفاتورة. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.'
   }
 };
 

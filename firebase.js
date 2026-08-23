@@ -14,6 +14,14 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
+const functionsInstance = firebase.functions();
+
+// Callable Cloud Function that authoritatively computes the VAT/discount
+// split server-side (see functions/index.js) and, for signed-in users,
+// writes the history entry itself via the Admin SDK.
+window.callCalculateBill = function (payload) {
+  return functionsInstance.httpsCallable('calculateBill')(payload);
+};
 
 // --- Auth helpers ---
 window.authCreateAccount = async function (email, password, displayName = '') {
