@@ -10,12 +10,133 @@ const firebaseConfig = {
   measurementId: "G-Z8RYVFS1RR"
 };
 
-// ---------------------------------------------------------------------
-// Local-storage fallback helpers are defined FIRST and UNCONDITIONALLY.
-// This guarantees they always exist — even if Firebase fails to load or
-// initialize (network blocked, ad-blocker, offline, bad config, etc.) —
-// so guest/local mode never breaks with "X is not defined" errors.
-// ---------------------------------------------------------------------
+// initialize
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const functionsInstance = firebase.functions();
+
+// Callable Cloud Function that authoritatively computes the VAT/discount
+// split server-side (see functions/index.js) and, for signed-in users,
+// writes the history entry itself via the Admin SDK.
+window.callCalculateBill = function (payload) {
+  return functionsInstance.httpsCallable('calculateBill')(payload);
+};
+
+// Callable Cloud Function that reads a photographed receipt using Gemini
+// (any language/script) and returns structured {totalOrder, subTotal,
+// discount, items}. Longer timeout since AI inference is slower than the
+// pure-math calculateBill call.
+window.callExtractReceipt = function (payload) {
+  return functionsInstance.httpsCallable('extractReceipt', { timeout: 60000 })(payload);
+};
+
+// --- Auth helpers ---
+window.authCreateAccount = async function (email, password, displayName = '') {
+  const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+  if (displayName) {
+    await userCredential.user.updateProfile({ displayName });
+  }
+  return userCredential.user;
+};
+
+window.authSignIn = async function (email, password) {
+  const userCredential = await auth.signInWithEmailAndPassword(email, password);
+  return userCredential.user;
+};
+
+window.authSignOut = async function () {
+  await auth.signOut();
+};
+
+// Callback for auth state changes: supply a function to react
+window.onAuthStateChanged = function (cb) {
+  auth.onAuthStateChanged((user) => {
+    cb(user);
+  });
+};
+
+// --- Firestore helpers ---
+// Save a calculation result under users/{uid}/history
+window.saveCalculationToFirestore = async function (uid, calculationObject) {
+  if (!uid) throw new Error('no uid');
+  const ref = db.collection('users').doc(uid).collection('history');
+  await ref.add(calculationObject);
+};
+
+// Return last N history items
+// NOTE: order by createdAt (we save createdAt), not "timestamp"
+window.getUserHistory = async function (uid, limit = 20) {
+  const ref = db.collection('users').doc(uid).collection('history').orderBy('createdAt', 'desc').limit(limit);
+  const snap = await ref.get();
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+};
+
+
+
+// --- Google Sign-in helper ---
+window.authSignInWithGoogle = async function () {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  const result = await auth.signInWithPopup(provider);
+  return result.user;
+};
+
+// Add or remove a favorite person
+window.toggleFavorite = async function (uid, favoriteObj) {
+  // favoriteObj: { name: 'Ahmed', notes: '', ... }
+  if (!uid) throw new Error('no uid');
+  const favRef = db.collection('users').doc(uid).collection('favorites');
+  // naive toggle: check if exists
+  const snap = await favRef.where('name', '==', favoriteObj.name).limit(1).get();
+  if (snap.empty) {
+    const res = await favRef.add({ ...favoriteObj, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    return { action: 'added', id: res.id };
+  } else {
+    // remove first match
+    const docId = snap.docs[0].id;
+    await favRef.doc(docId).delete();
+    return { action: 'removed', id: docId };
+  }
+};
+
+// --- Favorite helpers (add, update, delete) ---
+window.addFavorite = async function (uid, favoriteObj) {
+  if (!uid) throw new Error('no uid');
+  const favRef = db.collection('users').doc(uid).collection('favorites');
+  // check duplicate by name
+  const snap = await favRef.where('name', '==', favoriteObj.name).limit(1).get();
+  if (!snap.empty) {
+    // return existing doc id
+    return { action: 'exists', id: snap.docs[0].id };
+  }
+  const res = await favRef.add({ ...favoriteObj, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  return { action: 'added', id: res.id };
+};
+
+window.updateFavorite = async function (uid, favId, updates) {
+  if (!uid) throw new Error('no uid');
+  if (!favId) throw new Error('no favId');
+  await db.collection('users').doc(uid).collection('favorites').doc(favId).update({ ...updates });
+  return { action: 'updated', id: favId };
+};
+
+window.deleteFavorite = async function (uid, favId) {
+  if (!uid) throw new Error('no uid');
+  if (!favId) throw new Error('no favId');
+  await db.collection('users').doc(uid).collection('favorites').doc(favId).delete();
+  return { action: 'deleted', id: favId };
+};
+
+// Delete single history item (by doc id)
+window.deleteHistoryItem = async function (uid, historyDocId) {
+  if (!uid) throw new Error('no uid');
+  if (!historyDocId) throw new Error('no id');
+  await db.collection('users').doc(uid).collection('history').doc(historyDocId).delete();
+  return { action: 'deleted', id: historyDocId };
+};
+
+
+// --- Local fallback storage for non-auth users ---
 window.localSaveCalculation = function (calculationObject) {
   const arr = JSON.parse(localStorage.getItem('recalc_history') || '[]');
   arr.unshift(calculationObject);
@@ -23,18 +144,7 @@ window.localSaveCalculation = function (calculationObject) {
 };
 
 window.localGetHistory = function () {
-  try {
-    return JSON.parse(localStorage.getItem('recalc_history') || '[]');
-  } catch (e) {
-    return [];
-  }
-};
-
-window.localDeleteHistory = function (createdAtOrIndex) {
-  const arr = JSON.parse(localStorage.getItem('recalc_history') || '[]');
-  const newArr = arr.filter(item => item.createdAt !== createdAtOrIndex);
-  localStorage.setItem('recalc_history', JSON.stringify(newArr));
-  return newArr;
+  return JSON.parse(localStorage.getItem('recalc_history') || '[]');
 };
 
 window.localToggleFavorite = function (favoriteObj) {
@@ -49,12 +159,38 @@ window.localToggleFavorite = function (favoriteObj) {
   return arr;
 };
 
+// Get favorites list for a user (or empty array)
+window.getFavorites = async function (uid) {
+  // If uid is falsy, return an empty array to avoid exceptions
+  if (!uid) {
+    return [];
+  }
+  try {
+    const ref = db.collection('users').doc(uid).collection('favorites').orderBy('createdAt', 'desc');
+    const snap = await ref.get();
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (err) {
+    console.error('getFavorites error', err);
+    return [];
+  }
+};
+
+// local fallback getter
 window.localGetFavorites = function () {
   try {
     return JSON.parse(localStorage.getItem('recalc_favorites') || '[]');
   } catch (e) {
     return [];
   }
+};
+
+
+window.localDeleteHistory = function (createdAtOrIndex) {
+  const arr = JSON.parse(localStorage.getItem('recalc_history') || '[]');
+  // we store createdAt as ISO string for local saves; remove by createdAt match or index
+  const newArr = arr.filter(item => item.createdAt !== createdAtOrIndex);
+  localStorage.setItem('recalc_history', JSON.stringify(newArr));
+  return newArr;
 };
 
 window.localUpdateFavorite = function (oldName, newName) {
@@ -71,151 +207,6 @@ window.localDeleteFavorite = function (name) {
   const newArr = arr.filter(f => f.name !== name);
   localStorage.setItem('recalc_favorites', JSON.stringify(newArr));
   return newArr;
-};
-
-// ---------------------------------------------------------------------
-// Firebase initialization — wrapped in try/catch so a failure here can
-// NEVER stop the local helpers above from working, and never throws an
-// uncaught error that halts the rest of this file (or this script tag).
-// ---------------------------------------------------------------------
-let auth = null;
-let db = null;
-
-try {
-  if (typeof firebase === 'undefined') {
-    throw new Error('Firebase SDK not loaded (blocked network, ad-blocker, or script order issue).');
-  }
-  firebase.initializeApp(firebaseConfig);
-  auth = firebase.auth();
-  db = firebase.firestore();
-} catch (err) {
-  console.warn('Firebase init failed — continuing in local/guest mode only:', err);
-}
-
-function requireAuth() {
-  if (!auth) throw new Error('Firebase Auth is unavailable right now.');
-  return auth;
-}
-function requireDb() {
-  if (!db) throw new Error('Firebase Firestore is unavailable right now.');
-  return db;
-}
-
-// --- Auth helpers ---
-window.authCreateAccount = async function (email, password, displayName = '') {
-  const userCredential = await requireAuth().createUserWithEmailAndPassword(email, password);
-  if (displayName) {
-    await userCredential.user.updateProfile({ displayName });
-  }
-  return userCredential.user;
-};
-
-window.authSignIn = async function (email, password) {
-  const userCredential = await requireAuth().signInWithEmailAndPassword(email, password);
-  return userCredential.user;
-};
-
-window.authSignOut = async function () {
-  await requireAuth().signOut();
-};
-
-// Callback for auth state changes: supply a function to react
-window.onAuthStateChanged = function (cb) {
-  if (!auth) {
-    // Firebase unavailable — report "signed out" once so the rest of the
-    // page (history/favorites/UI) still initializes in guest mode.
-    setTimeout(() => cb(null), 0);
-    return;
-  }
-  auth.onAuthStateChanged((user) => {
-    cb(user);
-  });
-};
-
-// --- Firestore helpers ---
-// Save a calculation result under users/{uid}/history
-window.saveCalculationToFirestore = async function (uid, calculationObject) {
-  if (!uid) throw new Error('no uid');
-  const ref = requireDb().collection('users').doc(uid).collection('history');
-  await ref.add(calculationObject);
-};
-
-// Return last N history items
-window.getUserHistory = async function (uid, limit = 20) {
-  const ref = requireDb().collection('users').doc(uid).collection('history').orderBy('createdAt', 'desc').limit(limit);
-  const snap = await ref.get();
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-};
-
-// --- Google Sign-in helper ---
-window.authSignInWithGoogle = async function () {
-  const provider = new firebase.auth.GoogleAuthProvider();
-  const result = await requireAuth().signInWithPopup(provider);
-  return result.user;
-};
-
-// Add or remove a favorite person
-window.toggleFavorite = async function (uid, favoriteObj) {
-  if (!uid) throw new Error('no uid');
-  const favRef = requireDb().collection('users').doc(uid).collection('favorites');
-  const snap = await favRef.where('name', '==', favoriteObj.name).limit(1).get();
-  if (snap.empty) {
-    const res = await favRef.add({ ...favoriteObj, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-    return { action: 'added', id: res.id };
-  } else {
-    const docId = snap.docs[0].id;
-    await favRef.doc(docId).delete();
-    return { action: 'removed', id: docId };
-  }
-};
-
-// --- Favorite helpers (add, update, delete) ---
-window.addFavorite = async function (uid, favoriteObj) {
-  if (!uid) throw new Error('no uid');
-  const favRef = requireDb().collection('users').doc(uid).collection('favorites');
-  const snap = await favRef.where('name', '==', favoriteObj.name).limit(1).get();
-  if (!snap.empty) {
-    return { action: 'exists', id: snap.docs[0].id };
-  }
-  const res = await favRef.add({ ...favoriteObj, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-  return { action: 'added', id: res.id };
-};
-
-window.updateFavorite = async function (uid, favId, updates) {
-  if (!uid) throw new Error('no uid');
-  if (!favId) throw new Error('no favId');
-  await requireDb().collection('users').doc(uid).collection('favorites').doc(favId).update({ ...updates });
-  return { action: 'updated', id: favId };
-};
-
-window.deleteFavorite = async function (uid, favId) {
-  if (!uid) throw new Error('no uid');
-  if (!favId) throw new Error('no favId');
-  await requireDb().collection('users').doc(uid).collection('favorites').doc(favId).delete();
-  return { action: 'deleted', id: favId };
-};
-
-// Delete single history item (by doc id)
-window.deleteHistoryItem = async function (uid, historyDocId) {
-  if (!uid) throw new Error('no uid');
-  if (!historyDocId) throw new Error('no id');
-  await requireDb().collection('users').doc(uid).collection('history').doc(historyDocId).delete();
-  return { action: 'deleted', id: historyDocId };
-};
-
-// Get favorites list for a user (or empty array)
-window.getFavorites = async function (uid) {
-  if (!uid || !db) {
-    return [];
-  }
-  try {
-    const ref = db.collection('users').doc(uid).collection('favorites').orderBy('createdAt', 'desc');
-    const snap = await ref.get();
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  } catch (err) {
-    console.error('getFavorites error', err);
-    return [];
-  }
 };
 
 // This runs after fetching user's saved calculations
@@ -249,10 +240,9 @@ function renderUserHistoryPreview(historyArray) {
 // example: loadHistoryForUser(uid)
 async function loadHistoryForUser(uid) {
   try {
-    if (!db) { renderUserHistoryPreview([]); return; }
-    const userDocRef = db.collection('users').doc(uid);
-    const userDocSnap = await userDocRef.get();
-    if (!userDocSnap.exists) {
+    const userDocRef = doc(db, 'users', uid);
+    const userDocSnap = await getDoc(userDocRef);
+    if (!userDocSnap.exists()) {
       renderUserHistoryPreview([]);
       return;
     }
@@ -269,6 +259,8 @@ async function loadHistoryForUser(uid) {
 function openFullHistory() {
   window.location.href = 'history.html';
 }
+
+
 
 // Expose auth & db for debug if needed
 window._reCalcFirebase = { auth, db };

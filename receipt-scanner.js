@@ -50,8 +50,13 @@ function handleScanFileSelected(event) {
   if (!file) return;
 
   const reader = new FileReader();
-  reader.onload = function (e) {
-    scanImageDataUrl = e.target.result;
+  reader.onload = async function (e) {
+    try {
+      scanImageDataUrl = await downscaleImageDataUrl(e.target.result, 1600, 0.85);
+    } catch (err) {
+      console.warn('Downscale failed, using original image:', err);
+      scanImageDataUrl = e.target.result;
+    }
     const img = document.getElementById('scan-preview-img');
     const wrapper = document.getElementById('scan-preview-wrapper');
     if (img) img.src = scanImageDataUrl;
@@ -68,6 +73,32 @@ function handleScanFileSelected(event) {
   reader.readAsDataURL(file);
 }
 
+// Shrinks a data URL to at most maxDim on its longest side and re-encodes as
+// JPEG, so phone photos (often several MB) upload fast and stay comfortably
+// under the Cloud Function's request-size limit.
+function downscaleImageDataUrl(dataUrl, maxDim, quality) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        const scale = maxDim / Math.max(width, height);
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) { reject(new Error('canvas unsupported')); return; }
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => reject(new Error('image load failed'));
+    img.src = dataUrl;
+  });
+}
+
 window.retakePhoto = function () {
   scanImageDataUrl = null;
   const wrapper = document.getElementById('scan-preview-wrapper');
@@ -80,7 +111,10 @@ window.retakePhoto = function () {
 };
 
 // ---------------------------------------------------------------------
-// OCR extraction (Tesseract.js — runs fully client-side, nothing uploaded)
+// AI extraction (Gemini, via the extractReceipt Cloud Function) — reads
+// the receipt server-side, works across any language/script, and returns
+// clean structured data with quantities already expanded into individual
+// rows. Replaces the old Tesseract.js + regex-parsing approach.
 // ---------------------------------------------------------------------
 window.extractReceiptData = async function () {
   if (!scanImageDataUrl) return;
@@ -91,14 +125,23 @@ window.extractReceiptData = async function () {
   if (loadingEl) loadingEl.style.display = 'block';
 
   try {
-    if (typeof Tesseract === 'undefined') {
-      throw new Error('OCR engine not loaded');
-    }
-    const { data: { text } } = await Tesseract.recognize(scanImageDataUrl, 'eng');
-    const parsed = parseReceiptText(text || '');
-    populateScanFields(parsed);
+    const commaIdx = scanImageDataUrl.indexOf(',');
+    if (commaIdx === -1) throw new Error('invalid image data');
+    const meta = scanImageDataUrl.slice(5, commaIdx); // e.g. "image/jpeg;base64"
+    const mimeType = meta.split(';')[0] || 'image/jpeg';
+    const base64Data = scanImageDataUrl.slice(commaIdx + 1);
+
+    const response = await window.callExtractReceipt({ imageBase64: base64Data, mimeType });
+    const parsed = response.data || {};
+
+    populateScanFields({
+      totalOrder: parsed.totalOrder ? String(parsed.totalOrder) : '',
+      subTotal: parsed.subTotal ? String(parsed.subTotal) : '',
+      discount: parsed.discount ? String(parsed.discount) : '',
+      items: Array.isArray(parsed.items) ? parsed.items : []
+    });
   } catch (err) {
-    console.warn('OCR extraction failed:', err);
+    console.warn('AI receipt extraction failed:', err);
     showError('scan-error-message', translations[currentLanguage].ocrFailedError);
     // Fall back to empty editable fields so the user can fill them in by hand.
     populateScanFields({ totalOrder: '', subTotal: '', discount: '', items: [] });
@@ -107,103 +150,10 @@ window.extractReceiptData = async function () {
   }
 };
 
-// Skip OCR entirely and just show empty editable fields.
+// Skip AI extraction entirely and just show empty editable fields.
 window.scanManualFallback = function () {
   populateScanFields({ totalOrder: '', subTotal: '', discount: '', items: [] });
 };
-
-// ---------------------------------------------------------------------
-// Heuristic parsing of OCR text into { totalOrder, subTotal, discount, items }
-// ---------------------------------------------------------------------
-function parseReceiptText(rawText) {
-  const lines = rawText
-    .split(/\r?\n/)
-    .map(l => l.trim())
-    .filter(Boolean);
-
-  // Matches a trailing money amount at the end of a line, e.g. "Sub Total 1,330.00"
-  // or "FINAL TOTAL 1698.14" (no thousands separator).
-  const priceLineRegex = /^(.*?)[\s:._-]*[\$€£]?\s*([\d,]+\.\d{2}|\d+)\s*$/;
-
-  // Matches a "Qty  Description  UnitPrice  [LineTotal]" row, e.g.
-  // "5.00 Small Mineral Water 20.00 100" -> qty=5, desc="Small Mineral Water", unitPrice=20.00
-  const qtyItemRegex = /^(\d{1,3})(?:[.,]\d{1,2})?\s+(.+?)\s+([\d,]+[.,]\d{2})(?:\s+[\d,]+(?:[.,]\d{1,2})?)?\s*$/;
-
-  const totalKeywords = ['grand total', 'total due', 'amount due', 'final total', 'total'];
-  const subTotalKeywords = ['subtotal', 'sub total', 'sub-total'];
-  const discountKeywords = ['discount', 'disc.', 'disc', 'coupon', 'promo'];
-  const excludeKeywords = [
-    'vat', 'tax', 'service', 'change', 'cash', 'card', 'visa', 'mastercard',
-    'date', 'time', 'table', 'server', 'qty', 'quantity', 'receipt', 'invoice',
-    'order #', 'order no', 'tel', 'phone', 'thank', 'balance', 'tip', 'm. ch', 'm.ch'
-  ];
-
-  let totalOrder = '';
-  let subTotal = '';
-  let discount = '';
-  const items = [];
-
-  const normalizeAmount = (raw) => {
-    // Strip thousands separators, normalize decimal comma to dot.
-    let v = raw.replace(/\s/g, '');
-    if (/,\d{2}$/.test(v) && !/\.\d{2}$/.test(v)) {
-      v = v.replace(/\./g, '').replace(',', '.');
-    } else {
-      v = v.replace(/,/g, '');
-    }
-    const num = parseFloat(v);
-    return isNaN(num) ? null : num;
-  };
-
-  lines.forEach(line => {
-    const lower = line.toLowerCase();
-
-    // 1) Totals / subtotal / discount / excluded lines — classify using the
-    //    simple trailing-amount match first, regardless of a Qty column.
-    const simpleMatch = line.match(priceLineRegex);
-    if (simpleMatch) {
-      const amount = normalizeAmount(simpleMatch[2]);
-      if (amount !== null) {
-        const isSubTotal = subTotalKeywords.some(k => lower.includes(k));
-        const isTotal = !isSubTotal && totalKeywords.some(k => lower.includes(k));
-        const isDiscount = !isSubTotal && !isTotal && discountKeywords.some(k => lower.includes(k));
-        const isExcluded = !isSubTotal && !isTotal && !isDiscount && excludeKeywords.some(k => lower.includes(k));
-
-        if (isSubTotal) { subTotal = String(amount); return; }
-        if (isTotal) { totalOrder = String(amount); return; }
-        if (isDiscount) { discount = String(amount); return; }
-        if (isExcluded) { return; } // e.g. VAT/tax/service — the app derives VAT itself
-      }
-    }
-
-    // 2) Quantity-aware item line: "Qty  Description  UnitPrice  [LineTotal]"
-    //    Expand into one row per unit so each person can be assigned a single item.
-    const qtyMatch = line.match(qtyItemRegex);
-    if (qtyMatch) {
-      const qty = parseInt(qtyMatch[1], 10);
-      const label = qtyMatch[2].trim();
-      const unitPrice = normalizeAmount(qtyMatch[3]);
-      if (qty > 0 && unitPrice !== null && unitPrice > 0 && label) {
-        const count = Math.min(qty, 50); // sanity cap against OCR misreads
-        for (let i = 0; i < count; i++) {
-          items.push({ label, price: unitPrice });
-        }
-        return;
-      }
-    }
-
-    // 3) Fallback: plain "Description  Price" line with no usable Qty column.
-    if (simpleMatch) {
-      const labelPart = simpleMatch[1].trim();
-      const amount = normalizeAmount(simpleMatch[2]);
-      if (labelPart && amount !== null && amount > 0) {
-        items.push({ label: labelPart, price: amount });
-      }
-    }
-  });
-
-  return { totalOrder, subTotal, discount, items };
-}
 
 function populateScanFields(parsed) {
   document.getElementById('scan-total-order').value = parsed.totalOrder || '';
@@ -406,32 +356,26 @@ window.calculateFromAssignment = async function () {
     return;
   }
 
-  // Group items by person, defaulting every named person to an entry (even 0 items).
+  // Group items by person; every named person gets an entry (even with 0 items).
   const byName = {};
-  names.forEach(n => { byName[n] = { name: n, sum: 0, items: [] }; });
+  names.forEach(n => { byName[n] = { name: n, items: [] }; });
 
   rows.forEach(row => {
     const label = row.querySelector('.item-name-input').value.trim() || (translations[currentLanguage].noLabel || 'No-Label');
     const price = parseFloat(row.querySelector('.item-price-input').value) || 0;
     const person = row.querySelector('.assign-person-select').value;
     if (!person || price === 0) return;
-    if (!byName[person]) byName[person] = { name: person, sum: 0, items: [] };
+    if (!byName[person]) byName[person] = { name: person, items: [] };
     byName[person].items.push({ label, price });
-    byName[person].sum += price;
   });
 
-  const totals = names.map(n => byName[n] || { name: n, sum: 0, items: [] });
+  const totals = names.map(n => byName[n]);
 
-  const calcBtn = document.getElementById('assign-calculate-button');
-  window.setButtonLoading(calcBtn, true);
-  try {
-    await window.finalizeCalculation(totalOrder, subTotal, discount, totals, {
-      mismatchErrorId: 'assign-mismatch-error-message',
-      hideStepId: 'assign-step'
-    });
-  } finally {
-    window.setButtonLoading(calcBtn, false);
-  }
+  await window.finalizeCalculation(totalOrder, subTotal, discount, totals, {
+    mismatchErrorId: 'assign-mismatch-error-message',
+    hideStepId: 'assign-step',
+    calcButtonId: 'assign-calculate-button'
+  });
 };
 
 // ---------------------------------------------------------------------
