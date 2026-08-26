@@ -142,7 +142,11 @@ window.extractReceiptData = async function () {
     });
   } catch (err) {
     console.warn('AI receipt extraction failed:', err);
-    showError('scan-error-message', translations[currentLanguage].ocrFailedError);
+    const t = translations[currentLanguage];
+    const msg = (err && err.message === 'rateLimitExceeded')
+      ? (t.rateLimitError || t.ocrFailedError)
+      : t.ocrFailedError;
+    showError('scan-error-message', msg);
     // Fall back to empty editable fields so the user can fill them in by hand.
     populateScanFields({ totalOrder: '', subTotal: '', discount: '', items: [] });
   } finally {

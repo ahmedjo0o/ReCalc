@@ -16,6 +16,31 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 const functionsInstance = firebase.functions();
 
+// --- App Check (optional, off by default) ---
+// Protects the Cloud Functions below from being called by anything other
+// than this actual web app (e.g. a script hitting the endpoint directly to
+// run up your Gemini bill via extractReceipt). To turn this on:
+//   1. Firebase Console → App Check → Apps → register this web app,
+//      provider = reCAPTCHA v3, and copy the site key it gives you.
+//   2. Add <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-check-compat.js"></script>
+//      to any page that loads this file (it's optional — pages without it
+//      just skip activation below, nothing breaks).
+//   3. Paste the site key into APP_CHECK_SITE_KEY below.
+//   4. Watch the App Check "Metrics" tab in the console for a few days to
+//      confirm real traffic verifies correctly, THEN flip enforceAppCheck
+//      to true on calculateBill/extractReceipt in functions/index.js.
+//      Enforcing before that step will reject every request.
+const APP_CHECK_SITE_KEY = '6Lc8wJktAAAAAL64DgF_eykDaMzWxbK9JsHwOZAo'; // <-- paste your reCAPTCHA v3 site key here
+if (APP_CHECK_SITE_KEY && firebase.appCheck) {
+  try {
+    firebase.appCheck().activate(APP_CHECK_SITE_KEY, true);
+  } catch (err) {
+    console.warn('App Check activation failed:', err);
+  }
+} else if (!APP_CHECK_SITE_KEY) {
+  console.info('App Check not configured yet (APP_CHECK_SITE_KEY is empty) — skipping activation.');
+}
+
 // Callable Cloud Function that authoritatively computes the VAT/discount
 // split server-side (see functions/index.js) and, for signed-in users,
 // writes the history entry itself via the Admin SDK.

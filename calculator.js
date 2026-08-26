@@ -138,6 +138,7 @@ function mapServerErrorMessage(err, t) {
   const code = (err && err.message) || '';
   switch (code) {
     case 'itemsMismatch': return t.mismatchError;
+    case 'rateLimitExceeded': return t.rateLimitError || t.calculationFailedError;
     case 'totalOrderInvalid': return t.totalOrderError;
     case 'subTotalInvalid': return t.subTotalError;
     case 'discountInvalid': return t.discountError;
