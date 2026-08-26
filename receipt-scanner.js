@@ -369,16 +369,7 @@ window.calculateFromAssignment = async function () {
     byName[person].items.push({ label, price });
   });
 
-  const totals = names.map(n => {
-    const person = byName[n];
-    // هنا بنجمع أسعار الأصناف الخاصة بكل شخص عشان نبعتها لدالة المراجعة
-    const personSum = person.items.reduce((s, it) => s + (Number(it.price) || 0), 0);
-    return {
-      name: person.name,
-      items: person.items,
-      sum: personSum
-    };
-  });
+  const totals = names.map(n => byName[n]);
 
   await window.finalizeCalculation(totalOrder, subTotal, discount, totals, {
     mismatchErrorId: 'assign-mismatch-error-message',

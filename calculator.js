@@ -132,37 +132,70 @@ window.validateBillTotals = function (totalOrderValue, subTotalValue, discountVa
   return { totalOrder, subTotal, discount };
 };
 
-// --- Shared core: given totals (already validated) + a per-person totals array
-// --- ({ name, sum, items:[{label,price}] }), check the sums match, render the
-// --- result cards, persist the calculation, and reveal the result section.
-// --- opts: { mismatchErrorId, hideStepId }
+// Maps a calculateBill HttpsError's message code (see functions/index.js)
+// to a user-facing translated string.
+function mapServerErrorMessage(err, t) {
+  const code = (err && err.message) || '';
+  switch (code) {
+    case 'itemsMismatch': return t.mismatchError;
+    case 'totalOrderInvalid': return t.totalOrderError;
+    case 'subTotalInvalid': return t.subTotalError;
+    case 'discountInvalid': return t.discountError;
+    case 'discountGreaterThanTotal': return t.discountGreaterError;
+    case 'subTotalGreaterThanTotal': return t.subTotalGreaterError;
+    case 'negativeError': return t.negativeError;
+    default: return t.calculationFailedError || 'Something went wrong while calculating. Please try again.';
+  }
+}
+
+// --- Shared core: sends the (already client-validated) totals + a per-person
+// --- items array ({ name, items:[{label,price}] }) to the calculateBill
+// --- Cloud Function, which authoritatively recomputes every sum/share from
+// --- the raw items, validates them, and — for signed-in users — persists
+// --- the history entry itself via the Admin SDK (a direct client write is
+// --- blocked by firestore.rules on purpose). Renders the returned result
+// --- cards and reveals the result section.
+// --- opts: { mismatchErrorId, hideStepId, calcButtonId }
 window.finalizeCalculation = async function (totalOrder, subTotal, discount, totals, opts) {
   opts = opts || {};
   const mismatchErrorId = opts.mismatchErrorId || 'mismatch-error-message';
   const hideStepId = opts.hideStepId || 'step2and3';
+  const calcBtn = opts.calcButtonId ? document.getElementById(opts.calcButtonId) : null;
   const t = translations[currentLanguage];
 
-  const vat = totalOrder - subTotal;
-  const results = document.getElementById('result-cards-container');
-  results.innerHTML = '';
+  if (calcBtn) window.setButtonLoading(calcBtn, true);
 
-  const checkSum = totals.reduce((a, b) => a + (Number(b && b.sum) || 0), 0);
-
-  // Allow small floating diff but prevent gross mismatches; tolerance of 2 (same as original)
-  if (Math.abs(checkSum - subTotal) > 2) {
-    showError(mismatchErrorId, t.mismatchError);
+  let serverResult;
+  try {
+    const response = await window.callCalculateBill({
+      totalOrder,
+      subTotal,
+      discount,
+      // Never send a client-computed "sum" — the server recomputes it from
+      // raw items, since a tampered client could otherwise shift cost onto
+      // someone else.
+      totals: totals.map(({ name, items }) => ({ name, items: items || [] })),
+      localeLang: currentLanguage,
+      source: window.appFlow === 'scan' ? 'scan' : 'manual'
+    });
+    serverResult = response.data;
+  } catch (err) {
+    console.error('calculateBill failed:', err);
+    showError(mismatchErrorId, mapServerErrorMessage(err, t));
     return false;
+  } finally {
+    if (calcBtn) window.setButtonLoading(calcBtn, false);
   }
 
-  totals.forEach(({ name, sum = 0, items = [] }) => {
-    name = name || t.noLabel || '';
-    sum = Number(sum) || 0;
-    const percent = checkSum === 0 ? 0 : sum / checkSum;
-    const vatShare = vat * percent;
-    const discountShare = discount * percent;
-    const totalPay = sum + vatShare - discountShare;
+  const { results, vat, historyId } = serverResult;
 
-    const breakdownHtml = items.map(it => {
+  const resultsContainer = document.getElementById('result-cards-container');
+  resultsContainer.innerHTML = '';
+
+  results.forEach(({ name, sum, items, vatShare, discountShare, totalPay }) => {
+    name = name || t.noLabel || '';
+
+    const breakdownHtml = (items || []).map(it => {
       const labelText = (it.label && it.label.trim()) ? escapeHtml(it.label) : (t?.noLabel || 'No-Label');
       return `<div style="font-size:13px;">${labelText}: ${Number(it.price || 0).toFixed(2)}</div>`;
     }).join('');
@@ -171,10 +204,10 @@ window.finalizeCalculation = async function (totalOrder, subTotal, discount, tot
     card.classList.add('card', 'fade-slide-in');
     card.innerHTML = `
       <div class="card-header">${escapeHtml(name)}</div>
-      <div class="card-content">${t.order}: ${sum.toFixed(2)}</div>
-      <div class="card-content">${t.vat}: ${vatShare.toFixed(2)}</div>
-      <div class="card-content">${t.discount.replace(/\s*\(.*\)/, '')} ${discountShare.toFixed(2)}</div>
-      <div class="card-content total-to-pay"><strong>${t.totalToPay}: ${totalPay.toFixed(2)}</strong></div>
+      <div class="card-content">${t.order}: ${Number(sum || 0).toFixed(2)}</div>
+      <div class="card-content">${t.vat}: ${Number(vatShare || 0).toFixed(2)}</div>
+      <div class="card-content">${t.discount.replace(/\s*\(.*\)/, '')} ${Number(discountShare || 0).toFixed(2)}</div>
+      <div class="card-content total-to-pay"><strong>${t.totalToPay}: ${Number(totalPay || 0).toFixed(2)}</strong></div>
       <div class="card-details" style="margin-top:8px; font-size:13px;"><strong class="details-label">${t.details}</strong>
           ${breakdownHtml || `<div style="font-size:13px;color:#666;margin-top:4px;">${t.noLabel}</div>`}
       </div>
@@ -186,33 +219,29 @@ window.finalizeCalculation = async function (totalOrder, subTotal, discount, tot
         </svg>
       </button>
     `;
-    results.appendChild(card);
+    resultsContainer.appendChild(card);
   });
 
-  try {
-    const calcToSave = {
-      createdAt: (firebase && firebase.firestore && firebase.firestore.FieldValue)
-                  ? firebase.firestore.FieldValue.serverTimestamp()
-                  : new Date().toISOString(),
-      totalOrder,
-      subTotal,
-      discount,
-      vat,
-      totals,
-      resultsSummary: totals.map(tt => ({ name: tt.name, sum: tt.sum })),
-      localeLang: currentLanguage,
-      source: window.appFlow === 'scan' ? 'scan' : 'manual'
-    };
-
-    if (window.currentUser && window.currentUser.uid) {
-      // Await this: it's the backend round-trip, so the Calculate button's
-      // spinner stays visible for the actual duration of the save.
-      await saveCalculationToFirestore(window.currentUser.uid, calcToSave).catch(err => console.warn('save calc', err));
-    } else {
-      localSaveCalculation({ ...calcToSave, createdAt: new Date().toISOString() });
+  // The Cloud Function already persisted history for signed-in users (via
+  // the Admin SDK, which bypasses the client-write-blocking Firestore rule
+  // on purpose). For guests, historyId comes back null — fall back to the
+  // same local-storage save guests have always used.
+  if (!historyId) {
+    try {
+      localSaveCalculation({
+        createdAt: new Date().toISOString(),
+        totalOrder,
+        subTotal,
+        discount,
+        vat,
+        totals: results,
+        resultsSummary: results.map(r => ({ name: r.name, sum: r.sum })),
+        localeLang: currentLanguage,
+        source: window.appFlow === 'scan' ? 'scan' : 'manual'
+      });
+    } catch (err) {
+      console.warn('Could not save calculation locally:', err);
     }
-  } catch (err) {
-    console.warn('Could not save calculation:', err);
   }
 
   const hideStepEl = document.getElementById(hideStepId);
@@ -222,8 +251,9 @@ window.finalizeCalculation = async function (totalOrder, subTotal, discount, tot
   return true;
 };
 
-// --- calculateVAT: manual flow (step2and3). Builds totals from the order cards
-// --- and delegates the actual computation/rendering to finalizeCalculation. ---
+// --- calculateVAT: manual flow (step2and3). Builds a per-person items list
+// --- from the order cards and delegates computation/persistence/rendering
+// --- to finalizeCalculation (which calls the calculateBill Cloud Function).
 window.calculateVAT = async function () {
   const validated = window.validateBillTotals(
     document.getElementById('total-order').value,
@@ -249,20 +279,14 @@ window.calculateVAT = async function () {
       return { label, price };
     }).filter(i => i.price !== 0);
 
-    const sum = items.reduce((s, it) => s + (Number(it.price) || 0), 0);
-    return { name, sum, items };
+    return { name, items };
   });
 
-  const calcBtn = document.getElementById('calculate-button');
-  window.setButtonLoading(calcBtn, true);
-  try {
-    await window.finalizeCalculation(totalOrder, subTotal, discount, totals, {
-      mismatchErrorId: 'mismatch-error-message',
-      hideStepId: 'step2and3'
-    });
-  } finally {
-    window.setButtonLoading(calcBtn, false);
-  }
+  await window.finalizeCalculation(totalOrder, subTotal, discount, totals, {
+    mismatchErrorId: 'mismatch-error-message',
+    hideStepId: 'step2and3',
+    calcButtonId: 'calculate-button'
+  });
 }
 
 // --- Stylized, high-resolution export ---------------------------------
