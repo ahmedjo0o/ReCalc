@@ -361,7 +361,4 @@ window.shareFullResult = function () {
   const cards = [...resultContainer.querySelectorAll('.card')];
   exportCardsAsImage(cards, 'recalc-full-results.png', 'Receipt Results', 'Here is the full receipt breakdown');
 }
-function escapeForJS(s) {
-  return s.replace(/'/g, "\\'").replace(/"/g, '\\"');
-}
 

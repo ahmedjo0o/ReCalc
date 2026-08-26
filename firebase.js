@@ -209,58 +209,5 @@ window.localDeleteFavorite = function (name) {
   return newArr;
 };
 
-// This runs after fetching user's saved calculations
-function renderUserHistoryPreview(historyArray) {
-  const list = document.getElementById('history-list');
-  if (!list) return;
-
-  list.innerHTML = ''; // clear before re-render
-
-  if (!historyArray || historyArray.length === 0) {
-    list.innerHTML = '<p style="color:#666;">No history found.</p>';
-    return;
-  }
-
-  // show up to 3 most recent
-  const recent = historyArray.slice(-3).reverse(); // latest first
-
-  recent.forEach((item, index) => {
-    const div = document.createElement('div');
-    div.className = 'history-item';
-    div.style.cssText = 'padding:10px; margin-bottom:8px; border:1px solid rgba(0,0,0,0.05); border-radius:8px; background:#fff;';
-    div.innerHTML = `
-      <div style="font-weight:600;">${item.title || 'Calculation ' + (index + 1)}</div>
-      <div style="font-size:13px; color:#555;">Total: ${item.total || 0}</div>
-      <div style="font-size:12px; color:#999;">${new Date(item.timestamp).toLocaleString()}</div>
-    `;
-    list.appendChild(div);
-  });
-}
-
-// example: loadHistoryForUser(uid)
-async function loadHistoryForUser(uid) {
-  try {
-    const userDocRef = doc(db, 'users', uid);
-    const userDocSnap = await getDoc(userDocRef);
-    if (!userDocSnap.exists()) {
-      renderUserHistoryPreview([]);
-      return;
-    }
-
-    const data = userDocSnap.data();
-    const history = data.history || [];
-    renderUserHistoryPreview(history);
-  } catch (err) {
-    console.error('Error loading history:', err);
-    renderUserHistoryPreview([]);
-  }
-}
-
-function openFullHistory() {
-  window.location.href = 'history.html';
-}
-
-
-
 // Expose auth & db for debug if needed
 window._reCalcFirebase = { auth, db };

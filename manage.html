@@ -1,9 +1,8 @@
 <!doctype html>
 <html>
-
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Manage — reCalc</title>
   <link rel="stylesheet" href="styles.css" />
   <script>
@@ -17,7 +16,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
 </head>
-
 <body>
   <div id="page-loader" class="active">
     <div class="loader-lottie"></div>
@@ -43,7 +41,7 @@
 
     <section class="manage-section">
       <h2 id="manage-profile-title">Profile</h2>
-
+	  
       <div class="manage-row">
         <div style="flex:1;">
           <label id="manage-displayname-label" for="manage-displayname-input"></label>
@@ -71,12 +69,12 @@
     <hr style="margin:18px 0;">
 
     <section id="history-section" class="card" style="margin-top: 16px;">
-      <h2 id="recent-history-title"></h2>
-      <div id="history-list" style="margin-top: 8px;"></div>
-      <div style="text-align: center; margin-top: 10px;">
-        <button id="view-full-history-btn" class="primary" onclick="openFullHistory()">View Full History</button>
-      </div>
-    </section>
+		<h2 id="recent-history-title"></h2>
+		<div id="history-list" style="margin-top: 8px;"></div>
+		<div style="text-align: center; margin-top: 10px;">
+			<button id="view-full-history-btn" class="primary" onclick="openFullHistory()">View Full History</button>
+		</div>
+	</section>
 
 
 
@@ -94,235 +92,233 @@
 
 
     <div>
-      <small id="manage-note">Notes: If you're not signed in, favorites and history are stored locally in your browser.
-        For security, changing password requires your current password.</small>
+      <small id="manage-note">Notes: If you're not signed in, favorites and history are stored locally in your browser. For security, changing password requires your current password.</small>
     </div>
 
     <div style="margin-top:14px; display:flex; justify-content:flex-start;">
-      <button id="manage-back-btn"
-        onclick="location.href='index.html'">${translations[currentLanguage]?.manageBackButton || 'Back'}</button>
+      <button id="manage-back-btn" onclick="location.href='index.html'"></button>
     </div>
 
-
+	
   </div>
 
   <script src="firebase.js"></script>
   <script>
-    // ---------- Manage page helpers (PROFILE, HISTORY, FAVORITES) ----------
-    // Safe accessor: never throws even if Firebase failed to load/init,
-    // so history/favorites always fall back to local/guest mode instead
-    // of getting stuck on "Loading...".
-    function safeCurrentUser() {
-      try {
-        if (typeof firebase === 'undefined' || !firebase.apps || !firebase.apps.length) return null;
-        return firebase.auth().currentUser;
-      } catch (e) {
-        return null;
-      }
+  // ---------- Manage page helpers (PROFILE, HISTORY, FAVORITES) ----------
+  // Safe accessor: never throws even if Firebase failed to load/init,
+  // so history/favorites always fall back to local/guest mode instead
+  // of getting stuck on "Loading...".
+  function safeCurrentUser() {
+    try {
+      if (typeof firebase === 'undefined' || !firebase.apps || !firebase.apps.length) return null;
+      return firebase.auth().currentUser;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // reload helper
+  function reloadAll() {
+    loadProfile();
+    loadHistory();   // preview on manage page
+    loadFavorites();
+  }
+
+// PROFILE: show current displayName if present
+  async function loadProfile() {
+    const user = safeCurrentUser();
+    const el = document.getElementById('manage-displayname-input');
+    const msg = document.getElementById('manage-profile-message');
+    
+    // Get translation object
+    const t = window.translations[window.currentLanguage] || window.translations['en'];
+
+    // Get password UI elements
+    const currentPwdInput = document.getElementById('manage-current-password');
+    const newPwdInput = document.getElementById('manage-new-password');
+    const changePwdLabel = document.getElementById('change-password-label');
+    const changeBtn = document.getElementById('change-button');
+
+    if (msg) msg.innerText = '';
+    if (el) {
+      if (user) el.value = user.displayName || ''; 
+      else el.value = 'Guest';
     }
 
-    // reload helper
-    function reloadAll() {
-      loadProfile();
-      loadHistory();   // preview on manage page
-      loadFavorites();
-    }
+    if (user && currentPwdInput && newPwdInput && changePwdLabel && changeBtn) {
+      // Check user's providers
+      const providers = (user.providerData || []).map(p => p.providerId);
+      const hasPasswordProvider = providers.includes('password');
 
-    // PROFILE: show current displayName if present
-    async function loadProfile() {
-      const user = safeCurrentUser();
-      const el = document.getElementById('manage-displayname-input');
-      const msg = document.getElementById('manage-profile-message');
-
-      // Get translation object
-      const t = window.translations[window.currentLanguage] || window.translations['en'];
-
-      // Get password UI elements
-      const currentPwdInput = document.getElementById('manage-current-password');
-      const newPwdInput = document.getElementById('manage-new-password');
-      const changePwdLabel = document.getElementById('change-password-label');
-      const changeBtn = document.getElementById('change-button');
-
-      if (msg) msg.innerText = '';
-      if (el) {
-        if (user) el.value = user.displayName || '';
-        else el.value = 'Guest';
-      }
-
-      if (user && currentPwdInput && newPwdInput && changePwdLabel && changeBtn) {
-        // Check user's providers
-        const providers = (user.providerData || []).map(p => p.providerId);
-        const hasPasswordProvider = providers.includes('password');
-
-        if (hasPasswordProvider) {
-          // --- User has a password: "Change Password" mode ---
-          currentPwdInput.style.display = 'block';
-          currentPwdInput.placeholder = t.currentPasswordPlaceholder || 'Current password';
-          newPwdInput.placeholder = t.newPasswordPlaceholder || 'New password';
-          changePwdLabel.innerText = t.changePasswordLabel || 'Change password (requires current password)';
-          changeBtn.innerText = t.changeButton || 'Change';
-        } else {
-          // --- User is Google/other provider ONLY: "Set Password" mode ---
-          currentPwdInput.style.display = 'none'; // Hide "Current password"
-          newPwdInput.placeholder = t.setPasswordPlaceholder || 'Set a new password';
-          changePwdLabel.innerText = t.createPasswordLabel || 'Set a password (for email sign-in)';
-          changeBtn.innerText = t.createButton || 'Set Password';
-        }
-      } else if (!user && currentPwdInput) {
-        // Not logged in, show default "Change" UI
+      if (hasPasswordProvider) {
+        // --- User has a password: "Change Password" mode ---
         currentPwdInput.style.display = 'block';
         currentPwdInput.placeholder = t.currentPasswordPlaceholder || 'Current password';
         newPwdInput.placeholder = t.newPasswordPlaceholder || 'New password';
-        changePwdLabel.innerText = t.changePasswordLabel || 'Change password';
+        changePwdLabel.innerText = t.changePasswordLabel || 'Change password (requires current password)';
         changeBtn.innerText = t.changeButton || 'Change';
+      } else {
+        // --- User is Google/other provider ONLY: "Set Password" mode ---
+        currentPwdInput.style.display = 'none'; // Hide "Current password"
+        newPwdInput.placeholder = t.setPasswordPlaceholder || 'Set a new password';
+        changePwdLabel.innerText = t.createPasswordLabel || 'Set a password (for email sign-in)';
+        changeBtn.innerText = t.createButton || 'Set Password';
       }
+    } else if (!user && currentPwdInput) {
+       // Not logged in, show default "Change" UI
+       currentPwdInput.style.display = 'block';
+       currentPwdInput.placeholder = t.currentPasswordPlaceholder || 'Current password';
+       newPwdInput.placeholder = t.newPasswordPlaceholder || 'New password';
+       changePwdLabel.innerText = t.changePasswordLabel || 'Change password';
+       changeBtn.innerText = t.changeButton || 'Change';
+    }
+  }
+
+async function saveDisplayName() {
+  const user = safeCurrentUser();
+  const val = document.getElementById('manage-displayname-input').value.trim();
+  const msg = document.getElementById('manage-profile-message');
+  if (msg) msg.innerText = '';
+
+  if (!user) {
+    if (msg) msg.innerText = 'Sign in to save your display name.';
+    return;
+  }
+
+  try {
+    await user.updateProfile({ displayName: val });
+    if (msg) msg.innerText = 'Display name updated.';
+
+    // ✅ Fix: Only update UI if updateAuthUI and .auth-area exist
+    if (window.updateAuthUI && document.querySelector('.auth-area')) {
+      window.updateAuthUI(safeCurrentUser());
     }
 
-    async function saveDisplayName() {
-      const user = safeCurrentUser();
-      const val = document.getElementById('manage-displayname-input').value.trim();
-      const msg = document.getElementById('manage-profile-message');
-      if (msg) msg.innerText = '';
+  } catch (err) {
+    if (msg) msg.innerText = 'Could not update: ' + (err.message || err);
+  }
+}
 
-      if (!user) {
-        if (msg) msg.innerText = 'Sign in to save your display name.';
+
+  // CHANGE PASSWORD: unchanged logic (kept from original file)
+  async function changePassword() {
+    const user = safeCurrentUser();
+    const cur = document.getElementById('manage-current-password').value;
+    const neu = document.getElementById('manage-new-password').value;
+    const msg = document.getElementById('manage-profile-message');
+    if (msg) msg.innerText = '';
+
+    if (!user) { if (msg) msg.innerText = 'Sign in to change password.'; return; }
+    if (!neu) { if (msg) msg.innerText = 'Please enter a new password.'; return; }
+
+    const providers = (user.providerData || []).map(p => p.providerId);
+    const hasPasswordProvider = providers.includes('password');
+    const isGoogleOnly = providers.includes('google.com') && !hasPasswordProvider;
+
+    try {
+      if (hasPasswordProvider) {
+        if (!cur) { if (msg) msg.innerText = 'Enter your current password to confirm.'; return; }
+        const cred = firebase.auth.EmailAuthProvider.credential(user.email, cur);
+        await user.reauthenticateWithCredential(cred);
+        await user.updatePassword(neu);
+        if (msg) msg.innerText = 'Password changed successfully.';
+        document.getElementById('manage-current-password').value = '';
+        document.getElementById('manage-new-password').value = '';
         return;
       }
 
-      try {
-        await user.updateProfile({ displayName: val });
-        if (msg) msg.innerText = 'Display name updated.';
-
-        // ✅ Fix: Only update UI if updateAuthUI and .auth-area exist
-        if (window.updateAuthUI && document.querySelector('.auth-area')) {
-          window.updateAuthUI(safeCurrentUser());
+      if (isGoogleOnly) {
+        try {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          await user.reauthenticateWithPopup(provider);
+          await user.updatePassword(neu);
+          if (msg) msg.innerText = 'Password set successfully (you can now sign in with email/password).';
+          document.getElementById('manage-new-password').value = '';
+          return;
+        } catch (popupErr) {
+          console.warn('Google reauth failed', popupErr);
+          if (confirm('Could not reauthenticate with Google popup. Send a password reset email to ' + user.email + '?')) {
+            await firebase.auth().sendPasswordResetEmail(user.email);
+            if (msg) msg.innerText = 'Password reset email sent to ' + user.email;
+          } else {
+            if (msg) msg.innerText = 'Password not changed.';
+          }
+          return;
         }
-
-      } catch (err) {
-        if (msg) msg.innerText = 'Could not update: ' + (err.message || err);
       }
-    }
 
-
-    // CHANGE PASSWORD: unchanged logic (kept from original file)
-    async function changePassword() {
-      const user = safeCurrentUser();
-      const cur = document.getElementById('manage-current-password').value;
-      const neu = document.getElementById('manage-new-password').value;
-      const msg = document.getElementById('manage-profile-message');
-      if (msg) msg.innerText = '';
-
-      if (!user) { if (msg) msg.innerText = 'Sign in to change password.'; return; }
-      if (!neu) { if (msg) msg.innerText = 'Please enter a new password.'; return; }
-
-      const providers = (user.providerData || []).map(p => p.providerId);
-      const hasPasswordProvider = providers.includes('password');
-      const isGoogleOnly = providers.includes('google.com') && !hasPasswordProvider;
-
-      try {
-        if (hasPasswordProvider) {
-          if (!cur) { if (msg) msg.innerText = 'Enter your current password to confirm.'; return; }
-          const cred = firebase.auth.EmailAuthProvider.credential(user.email, cur);
-          await user.reauthenticateWithCredential(cred);
+      if (providers.length) {
+        const providerId = providers[0];
+        let provider;
+        if (providerId === 'facebook.com') provider = new firebase.auth.FacebookAuthProvider();
+        else if (providerId === 'google.com') provider = new firebase.auth.GoogleAuthProvider();
+        if (provider) {
+          await user.reauthenticateWithPopup(provider);
           await user.updatePassword(neu);
           if (msg) msg.innerText = 'Password changed successfully.';
-          document.getElementById('manage-current-password').value = '';
           document.getElementById('manage-new-password').value = '';
           return;
         }
-
-        if (isGoogleOnly) {
-          try {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            await user.reauthenticateWithPopup(provider);
-            await user.updatePassword(neu);
-            if (msg) msg.innerText = 'Password set successfully (you can now sign in with email/password).';
-            document.getElementById('manage-new-password').value = '';
-            return;
-          } catch (popupErr) {
-            console.warn('Google reauth failed', popupErr);
-            if (confirm('Could not reauthenticate with Google popup. Send a password reset email to ' + user.email + '?')) {
-              await firebase.auth().sendPasswordResetEmail(user.email);
-              if (msg) msg.innerText = 'Password reset email sent to ' + user.email;
-            } else {
-              if (msg) msg.innerText = 'Password not changed.';
-            }
-            return;
-          }
-        }
-
-        if (providers.length) {
-          const providerId = providers[0];
-          let provider;
-          if (providerId === 'facebook.com') provider = new firebase.auth.FacebookAuthProvider();
-          else if (providerId === 'google.com') provider = new firebase.auth.GoogleAuthProvider();
-          if (provider) {
-            await user.reauthenticateWithPopup(provider);
-            await user.updatePassword(neu);
-            if (msg) msg.innerText = 'Password changed successfully.';
-            document.getElementById('manage-new-password').value = '';
-            return;
-          }
-        }
-
-        await firebase.auth().sendPasswordResetEmail(user.email);
-        if (msg) msg.innerText = 'Password reset email sent to ' + user.email;
-      } catch (err) {
-        console.error('changePassword error', err);
-        if (msg) msg.innerText = 'Could not change password: ' + (err.message || err);
       }
+
+      await firebase.auth().sendPasswordResetEmail(user.email);
+      if (msg) msg.innerText = 'Password reset email sent to ' + user.email;
+    } catch (err) {
+      console.error('changePassword error', err);
+      if (msg) msg.innerText = 'Could not change password: ' + (err.message || err);
+    }
+  }
+
+  // ---------- HISTORY PREVIEW on manage.html (show latest 3) ----------
+  function renderHistoryPreview(items) {
+  const t = window.translations[window.currentLanguage] || window.translations['en'];
+  const list = document.getElementById('history-list');
+  if (!list) return;
+  list.innerHTML = '';
+
+  if (!items || items.length === 0) {
+    list.innerHTML = '<p style="color:#666; margin:8px 0;">No history found.</p>';
+    return;
+  }
+
+  const recent = items.slice(0, 3);
+
+  recent.forEach((d) => {
+    let when = '';
+    if (d.createdAt && typeof d.createdAt.toDate === 'function') {
+      when = d.createdAt.toDate().toLocaleString();
+    } else if (d.createdAt) {
+      try { when = new Date(d.createdAt).toLocaleString(); } catch { when = String(d.createdAt); }
     }
 
-    // ---------- HISTORY PREVIEW on manage.html (show latest 3) ----------
-    function renderHistoryPreview(items) {
-      const t = window.translations[window.currentLanguage] || window.translations['en'];
-      const list = document.getElementById('history-list');
-      if (!list) return;
-      list.innerHTML = '';
+    const totalVal = Number(d.totalOrder ?? d.total ?? 0).toFixed(2);
+    const subTotalVal = Number(d.subTotal ?? d.subtotal ?? 0).toFixed(2);
 
-      if (!items || items.length === 0) {
-        list.innerHTML = '<p style="color:#666; margin:8px 0;">No history found.</p>';
-        return;
+    const namesHtml = (d.totals || []).map(tItem => {
+      const name = tItem.name || '';
+      const value = Number(tItem.sum || 0).toFixed(2);
+      let breakdownText = '';
+
+      if (tItem.breakdown) breakdownText = String(tItem.breakdown);
+      else if (tItem.items && Array.isArray(tItem.items)) {
+        breakdownText = tItem.items
+          .map(i => `${i.label || i.name || ''}: ${Number(i.price || i.value || 0).toFixed(2)}`)
+          .join(', ');
       }
 
-      const recent = items.slice(0, 3);
-
-      recent.forEach((d) => {
-        let when = '';
-        if (d.createdAt && typeof d.createdAt.toDate === 'function') {
-          when = d.createdAt.toDate().toLocaleString();
-        } else if (d.createdAt) {
-          try { when = new Date(d.createdAt).toLocaleString(); } catch { when = String(d.createdAt); }
-        }
-
-        const totalVal = Number(d.totalOrder ?? d.total ?? 0).toFixed(2);
-        const subTotalVal = Number(d.subTotal ?? d.subtotal ?? 0).toFixed(2);
-
-        const namesHtml = (d.totals || []).map(tItem => {
-          const name = tItem.name || '';
-          const value = Number(tItem.sum || 0).toFixed(2);
-          let breakdownText = '';
-
-          if (tItem.breakdown) breakdownText = String(tItem.breakdown);
-          else if (tItem.items && Array.isArray(tItem.items)) {
-            breakdownText = tItem.items
-              .map(i => `${i.label || i.name || ''}: ${Number(i.price || i.value || 0).toFixed(2)}`)
-              .join(', ');
-          }
-
-          return `<div class="history-name-line">
+      return `<div class="history-name-line">
                 <strong>${name}:</strong>
                 <span class="history-value-blue">${value}</span>
                 ${breakdownText ? `<span class="history-breakdown"> (${breakdownText})</span>` : ''}
               </div>`;
-        }).join('');
+    }).join('');
 
-        const docId = d.id ? d.id : '';
+    const docId = d.id ? d.id : '';
 
-        const card = document.createElement('div');
-        card.className = 'card history-card';
+    const card = document.createElement('div');
+    card.className = 'card history-card';
 
-        card.innerHTML = `
+    card.innerHTML = `
       <div class="card-header">${when}</div>
 
       <div class="card-content" style="flex-direction:column; align-items:flex-start;">
@@ -335,12 +331,12 @@
             <span>${t.subTotal || 'Subtotal'}</span>
             <span class="history-value-red">${subTotalVal}</span>
           </div>
-          ${(d.discount || d.discount === 0 || d.discount === '' || d.discount === 0) ? `
+          ${ (d.discount || d.discount === 0 || d.discount === '' || d.discount === 0) ? `
             <div class="history-discount-line" style="display:flex; justify-content:space-between; font-weight:600; font-size:15px;">
-              <span>${(t.discount || 'Discount').replace(/\s*\(.*\)/, '')}</span>
+              <span>${(t.discount || 'Discount').replace(/\s*\(.*\)/,'')}</span>
               <span class="history-value-red">${Number(d.discount || 0).toFixed(2)}</span>
             </div>
-          ` : ''}
+          ` : '' }
 
         </div>
         <div class="history-separator"></div>
@@ -352,169 +348,168 @@
       </div>
     `;
 
-        list.appendChild(card);
-      });
-    }
+    list.appendChild(card);
+  });
+}
 
 
 
-    async function loadHistory() {
-      const list = document.getElementById('history-list');
-      if (!list) return;
-      list.innerHTML = 'Loading...';
-      try {
-        const user = safeCurrentUser();
-        let items = [];
-        if (user && user.uid) {
-          // fetch 3 latest directly from Firestore
-          items = await window.getUserHistory(user.uid, 3);
-        } else {
-          // local fallback: get all then take latest three
-          items = window.localGetHistory() || [];
-          // localGetHistory stores newest-first (unshift), so slice 0..3
-          items = items.slice(0, 3);
-        }
-        renderHistoryPreview(items);
-      } catch (err) {
-        console.error('loadHistory error', err);
-        list.innerText = 'Error loading history: ' + (err.message || '');
+  async function loadHistory() {
+    const list = document.getElementById('history-list');
+    if (!list) return;
+    list.innerHTML = 'Loading...';
+    try {
+      const user = safeCurrentUser();
+      let items = [];
+      if (user && user.uid) {
+        // fetch 3 latest directly from Firestore
+        items = await window.getUserHistory(user.uid, 3);
+      } else {
+        // local fallback: get all then take latest three
+        items = window.localGetHistory() || [];
+        // localGetHistory stores newest-first (unshift), so slice 0..3
+        items = items.slice(0, 3);
       }
+      renderHistoryPreview(items);
+    } catch (err) {
+      console.error('loadHistory error', err);
+      list.innerText = 'Error loading history: ' + (err.message || '');
     }
+  }
 
-    async function deleteHistoryConfirm(docId, createdAt) {
-      const t = window.translations[window.currentLanguage] || window.translations['en'];
-      const confirmMsg = t.alertConfirmDeleteOne || 'Are you sure you want to delete this calculation?';
-
-      if (!confirm(confirmMsg)) return;
-
-      try {
-        const user = safeCurrentUser();
-        if (user && user.uid && docId) {
-          await window.deleteHistoryItem(user.uid, docId);
-        } else {
-          // local delete by createdAt or index
-          window.localDeleteHistory(createdAt);
-        }
-        // refresh preview after deletion
-        await loadHistory();
-      } catch (err) {
-        alert('Could not delete: ' + (err.message || err));
+  async function deleteHistoryConfirm(docId, createdAt) {
+    const t = window.translations[window.currentLanguage] || window.translations['en'];
+    const confirmMsg = t.alertConfirmDeleteOne || 'Are you sure you want to delete this calculation?';
+        
+    if (!confirm(confirmMsg)) return;
+    
+    try {
+      const user = safeCurrentUser();
+      if (user && user.uid && docId) {
+        await window.deleteHistoryItem(user.uid, docId);
+      } else {
+        // local delete by createdAt or index
+        window.localDeleteHistory(createdAt);
       }
+      // refresh preview after deletion
+      await loadHistory();
+    } catch (err) {
+      alert('Could not delete: ' + (err.message || err));
     }
+  }
 
-    function openFullHistory() {
-      window.location.href = 'history.html';
+  function openFullHistory() {
+    window.location.href = 'history.html';
+  }
+
+  // ---------- FAVORITES (unchanged) ----------
+  async function renderFavorites(favs) {
+    const root = document.getElementById('manage-favs-root');
+    if (!root) return;
+	
+	// Get translations object
+    const t = window.translations[window.currentLanguage] || window.translations['en'];
+    const saveText = t.saveButton || 'Save';
+    const deleteText = t.deleteButton || 'Delete';
+	
+    if (!favs || favs.length === 0) {
+      root.innerHTML = '<div>No favorites yet.</div>';
+      return;
     }
-
-    // ---------- FAVORITES (unchanged) ----------
-    async function renderFavorites(favs) {
-      const root = document.getElementById('manage-favs-root');
-      if (!root) return;
-
-      // Get translations object
-      const t = window.translations[window.currentLanguage] || window.translations['en'];
-      const saveText = t.saveButton || 'Save';
-      const deleteText = t.deleteButton || 'Delete';
-
-      if (!favs || favs.length === 0) {
-        root.innerHTML = '<div>No favorites yet.</div>';
-        return;
-      }
-
-      // Use translated text and remove duplicate ids
-      root.innerHTML = favs.map(f => `
+	
+	// Use translated text and remove duplicate ids
+    root.innerHTML = favs.map(f => `
       <div class="fav-row">
         <div style="flex:1;">
-          <input id="fav-input-${f.id || f.name}" value="${(f.name || '').replace(/"/g, '&quot;')}">
+          <input id="fav-input-${f.id||f.name}" value="${(f.name||'').replace(/"/g,'&quot;')}">
         </div>
         <div class="fav-actions">
-          <button onclick="saveFavEdit('${f.id || ''}','${(f.name || '').replace(/'/g, "\\'")}')">${saveText}</button>
-          <button onclick="confirmDeleteFav('${f.id || ''}','${(f.name || '').replace(/'/g, "\\'")}')">${deleteText}</button>
+          <button onclick="saveFavEdit('${f.id||''}','${(f.name||'').replace(/'/g,"\\'")}')">${saveText}</button>
+          <button onclick="confirmDeleteFav('${f.id||''}','${(f.name||'').replace(/'/g,"\\'")}')">${deleteText}</button>
         </div>
       </div>
     `).join('');
+	
+  }
 
+  async function loadFavorites() {
+    const root = document.getElementById('manage-favs-root');
+    if (root) root.innerHTML = 'Loading...';
+    try {
+      const user = safeCurrentUser();
+      let favs = [];
+      if (user && user.uid) favs = await window.getFavorites(user.uid);
+      else favs = window.localGetFavorites().map(f => ({ id: f.name, name: f.name }));
+      renderFavorites(favs);
+    } catch (err) {
+      if (root) root.innerText = 'Error loading favorites: ' + (err.message || err);
     }
+  }
 
-    async function loadFavorites() {
-      const root = document.getElementById('manage-favs-root');
-      if (root) root.innerHTML = 'Loading...';
-      try {
-        const user = safeCurrentUser();
-        let favs = [];
-        if (user && user.uid) favs = await window.getFavorites(user.uid);
-        else favs = window.localGetFavorites().map(f => ({ id: f.name, name: f.name }));
-        renderFavorites(favs);
-      } catch (err) {
-        if (root) root.innerText = 'Error loading favorites: ' + (err.message || err);
+  async function addNewFavorite() {
+    const input = document.getElementById('new-fav-name');
+    const name = (input.value || '').trim();
+    if (!name) return alert('Enter a name');
+    try {
+      const user = safeCurrentUser();
+      if (user && user.uid) {
+        await window.addFavorite(user.uid, { name });
+      } else {
+        window.localToggleFavorite({ name });
       }
+      input.value = '';
+      loadFavorites();
+      if (window.loadFavoritesForUI) loadFavoritesForUI(window.currentUser ? window.currentUser.uid : null);
+    } catch (err) {
+      alert('Could not add favorite: ' + (err.message || err));
     }
+  }
 
-    async function addNewFavorite() {
-      const input = document.getElementById('new-fav-name');
-      const name = (input.value || '').trim();
-      if (!name) return alert('Enter a name');
-      try {
-        const user = safeCurrentUser();
-        if (user && user.uid) {
-          await window.addFavorite(user.uid, { name });
-        } else {
-          window.localToggleFavorite({ name });
-        }
-        input.value = '';
-        loadFavorites();
-        if (window.loadFavoritesForUI) loadFavoritesForUI(window.currentUser ? window.currentUser.uid : null);
-      } catch (err) {
-        alert('Could not add favorite: ' + (err.message || err));
+  async function saveFavEdit(id, oldName) {
+    const input = document.getElementById(`fav-input-${id||oldName}`);
+    const newName = (input.value || '').trim();
+    if (!newName) return alert('Name cannot be empty');
+    try {
+      const user = safeCurrentUser();
+      if (user && user.uid && id) {
+        await window.updateFavorite(user.uid, id, { name: newName });
+      } else {
+        window.localUpdateFavorite(oldName, newName);
       }
+      loadFavorites();
+      if (window.loadFavoritesForUI) loadFavoritesForUI(window.currentUser ? window.currentUser.uid : null);
+    } catch (err) {
+      alert('Could not update favorite: ' + (err.message || err));
     }
+  }
 
-    async function saveFavEdit(id, oldName) {
-      const input = document.getElementById(`fav-input-${id || oldName}`);
-      const newName = (input.value || '').trim();
-      if (!newName) return alert('Name cannot be empty');
-      try {
-        const user = safeCurrentUser();
-        if (user && user.uid && id) {
-          await window.updateFavorite(user.uid, id, { name: newName });
-        } else {
-          window.localUpdateFavorite(oldName, newName);
-        }
-        loadFavorites();
-        if (window.loadFavoritesForUI) loadFavoritesForUI(window.currentUser ? window.currentUser.uid : null);
-      } catch (err) {
-        alert('Could not update favorite: ' + (err.message || err));
-      }
+  async function confirmDeleteFav(id, name) {
+    if (!confirm('Delete this favorite?')) return;
+    try {
+      const user = safeCurrentUser();
+      if (user && user.uid && id) await window.deleteFavorite(user.uid, id);
+      else window.localDeleteFavorite(name);
+      loadFavorites();
+      if (window.loadFavoritesForUI) loadFavoritesForUI(window.currentUser ? window.currentUser.uid : null);
+    } catch (err) {
+      alert('Could not delete favorite: ' + (err.message || err));
     }
+  }
 
-    async function confirmDeleteFav(id, name) {
-      if (!confirm('Delete this favorite?')) return;
-      try {
-        const user = safeCurrentUser();
-        if (user && user.uid && id) await window.deleteFavorite(user.uid, id);
-        else window.localDeleteFavorite(name);
-        loadFavorites();
-        if (window.loadFavoritesForUI) loadFavoritesForUI(window.currentUser ? window.currentUser.uid : null);
-      } catch (err) {
-        alert('Could not delete favorite: ' + (err.message || err));
-      }
-    }
+  // hook auth state and load data (preview + profile)
+  window.onAuthStateChanged(() => {
+    setTimeout(reloadAll, 200);
+    setTimeout(loadProfile, 100);
+  });
 
-    // hook auth state and load data (preview + profile)
-    window.onAuthStateChanged(() => {
-      setTimeout(reloadAll, 200);
-      setTimeout(loadProfile, 100);
-    });
-
-    // initial load (local)
-    setTimeout(reloadAll, 300);
-    setTimeout(loadProfile, 300);
-  </script>
+  // initial load (local)
+  setTimeout(reloadAll, 300);
+  setTimeout(loadProfile, 300);
+</script>
 
 
-  <script src="translations.js"></script>
-  <script src="calculator.js"></script>
-  <script src="main.js"></script>
+	<script src="translations.js"></script>
+	<script src="calculator.js"></script>
+	<script src="main.js"></script>
 </body>
-
 </html>
