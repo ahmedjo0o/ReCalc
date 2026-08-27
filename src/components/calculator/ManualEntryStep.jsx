@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Button from '../ui/Button.jsx';
 import Card from '../ui/Card.jsx';
 import { Field, TextInput } from '../ui/Field.jsx';
+import ItemsSumStatus from './ItemsSumStatus.jsx';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 import { validateBillTotals } from '../../lib/validation.js';
 
@@ -21,6 +22,14 @@ export default function ManualEntryStep({ names, onBack, onCalculate, calculatin
   function personSubtotal(card) {
     return card.rows.reduce((sum, r) => sum + (parseFloat(r.value) || 0), 0);
   }
+
+  // Live, client-side equivalent of the server's itemsMismatch check — lets
+  // people see (and fix) a mismatch immediately instead of only finding out
+  // after a round-trip to calculateBill.
+  const itemsSum = cards.reduce((s, card) => s + personSubtotal(card), 0);
+  const subTotalNum = parseFloat(subTotal);
+  const hasSubTotal = subTotal !== '' && !isNaN(subTotalNum);
+  const isMismatch = hasSubTotal && Math.abs(itemsSum - subTotalNum) > 2;
 
   function updateRow(personIdx, rowIdx, key, value) {
     setCards((prev) => {
@@ -57,6 +66,10 @@ export default function ManualEntryStep({ names, onBack, onCalculate, calculatin
       return;
     }
     setFieldErrors({});
+
+    // Belt-and-suspenders: the button is already disabled while mismatched,
+    // but guard here too in case totalOrder/discount/tip changed since.
+    if (isMismatch) return;
 
     const totals = names.map((name, i) => {
       const items = cards[i].rows
@@ -117,11 +130,14 @@ export default function ManualEntryStep({ names, onBack, onCalculate, calculatin
         ))}
       </div>
 
+      <ItemsSumStatus itemsSum={itemsSum} subTotal={subTotal} />
       <span className="error-text">{serverError}</span>
 
       <div style={{ marginTop: 16, display: 'flex', gap: 10 }}>
         <Button variant="secondary" onClick={onBack}>{t.backButton}</Button>
-        <Button variant="primary" loading={calculating} onClick={handleCalculate}>{t.calculateButton}</Button>
+        <Button variant="primary" loading={calculating} disabled={isMismatch} onClick={handleCalculate}>
+          {t.calculateButton}
+        </Button>
       </div>
     </div>
   );
