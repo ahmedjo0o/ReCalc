@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>About - reCalc</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+
+  <script>
+    // Capture page load start time as early as possible
+    window.startTime = Date.now();
+  </script>
+  <script src="https://unpkg.com/lottie-web@5.9.4/build/player/lottie.min.js" defer></script>
+</head>
+<body>
+  <div id="page-loader" class="active">
+    <div class="loader-lottie"></div>
+  </div>
+
+  <div id="page-wrapper">
+    <!-- Logo -->
+    <div style="text-align: center; margin-top: 50px;">
+      <a href="index.html">
+        <img src="logo.svg" alt="ReCalc Logo" style="max-width: 320px; height: auto;" />
+      </a>
+    </div>
+
+    <!-- Content -->
+    <div class="container">
+      <h1 class="centered-title">About us / من نحن؟</h1>
+
+      <!-- English Section -->
+      
+      <p><strong>reCalc</strong> is a simple, lightweight web app created to help people easily split receipts and bills between friends, family, or team members. Whether you're out at a café, traveling, or sharing expenses at an event, reCalc makes the process fast, fair, and frustration-free.</p>
+      
+	  <p>This tool was built with simplicity in mind, with no user registration required to use it. Your receipt values are sent securely to our server only to calculate and verify your split — nothing is stored unless you choose to sign in, and even then only your own calculation history is saved to your account.</p>
+	  
+	  <p>If you have feedback or ideas to improve reCalc, feel free to reach out through the contact page.</p>
+
+      <hr style="margin: 30px 0;" />
+
+      <!-- Arabic Section -->
+      <div dir="rtl">
+        
+        <p><strong>reCalc</strong> هو تطبيق ويب بسيط وخفيف يساعدك على تقسيم الفواتير والمصروفات بين الأصدقاء أو العائلة أو زملاء الفريق بسهولة. سواء كنت في مقهى، أو في رحلة، أو في مناسبة جماعية، يوفّر reCalc تجربة سريعة وعادلة وخالية من التعقيد.</p>
+
+        <p>تم تصميم هذا التطبيق ببساطة ودون الحاجة لتسجيل حساب لاستخدامه. تُرسَل قيم فاتورتك بشكل آمن إلى خادمنا فقط لحساب توزيع الفاتورة والتحقق منه — ولا يتم تخزين أي شيء إلا إذا اخترت تسجيل الدخول، وحتى في هذه الحالة يُحفظ فقط سجل حساباتك الخاص بحسابك.</p>
+
+        <p>إذا كان لديك أي اقتراحات أو تعليقات، يسعدنا تواصلك من خلال صفحة "تواصل معنا".</p>
+
+      </div>
+
+      <!-- Back Button -->
+      <div style="text-align: center; margin-top: 30px;">
+        <button onclick="window.location.href='index.html'">⬅ Back / رجوع</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="translations.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>

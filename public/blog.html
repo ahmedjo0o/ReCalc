@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Blog & Guides - reCalc</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+  <script>
+    window.startTime = Date.now();
+  </script>
+  <script src="https://unpkg.com/lottie-web@5.9.4/build/player/lottie.min.js" defer></script>
+  <style>
+    .blog-list { list-style: none; padding-left: 0; }
+    .blog-list li { margin-bottom: 16px; }
+    .blog-list a {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #004794;
+      text-decoration: none;
+    }
+    .blog-list a:hover { text-decoration: underline; color: #d62c1a; }
+  </style>
+</head>
+<body>
+  <div id="page-loader" class="active">
+    <div class="loader-lottie"></div>
+  </div>
+
+  <div id="page-wrapper">
+    <div style="text-align: center; margin-top: 50px;">
+      <a href="index.html">
+        <img src="logo.svg" alt="ReCalc Logo" style="max-width: 320px; height: auto;" />
+      </a>
+    </div>
+
+    <div class="container">
+      <h1 class="centered-title">reCalc Blog & Guides / مدونة وأدلة reCalc</h1>
+
+      <div>
+        <p>Welcome to the reCalc blog! Here you'll find tips, guides, and articles on managing shared expenses, understanding your bills, and making finances with friends easier.</p>
+        
+        <ul class="blog-list">
+          <li>
+            <a href="blog-post-1.html">5 Tips for Splitting Bills Fairly with Roommates</a>
+          </li>
+          <li>
+            <a href="blog-post-2.html">How to Manage Shared Expenses on a Group Vacation</a>
+          </li>
+          <li>
+            <a href="blog-post-3.html">Understanding VAT and Service Charges on Your Restaurant Bill</a>
+          </li>
+        </ul>
+      </div>
+
+      <hr style="margin: 30px 0;" />
+
+      <div dir="rtl">
+        <p>أهلاً بك في مدونة reCalc! ستجد هنا نصائح وإرشادات ومقالات حول إدارة النفقات المشتركة، وفهم فواتيرك، وتسهيل الأمور المالية مع الأصدقاء.</p>
+        
+        <ul class="blog-list">
+          <li>
+            <a href="blog-post-1.html">5 نصائح لتقسيم الفواتير بعدل بين زملاء السكن</a>
+          </li>
+          <li>
+            <a href="blog-post-2.html">كيفية إدارة النفقات المشتركة في عطلة جماعية</a>
+          </li>
+          <li>
+            <a href="blog-post-3.html">فهم ضريبة القيمة المضافة ورسوم الخدمة في فاتورة مطعمك</a>
+          </li>
+        </ul>
+      </div>
+
+      <div style="text-align: center; margin-top: 30px;">
+        <button onclick="window.location.href='index.html'" id="back-to-index-btn"></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="translations.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
