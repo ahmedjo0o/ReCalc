@@ -1,5 +1,6 @@
 import { useCallback, useReducer } from 'react';
 import { callCalculateBill } from '../lib/api.js';
+import { attachTipToHistory } from '../lib/firestoreService.js';
 import { mapServerErrorMessage } from '../lib/errors.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useLanguage } from '../context/LanguageContext.jsx';
@@ -76,7 +77,7 @@ export function useCalculatorFlow() {
           localeLang: language,
           source: state.flow === 'scan' ? 'scan' : 'manual',
         });
-        const { results } = response.data;
+        const { results, historyId } = response.data;
 
         // The Cloud Function persists history itself for signed-in callers
         // (via context.auth, never a client-supplied uid). Guests get
@@ -89,13 +90,23 @@ export function useCalculatorFlow() {
           totalPay: Number((r.totalPay + perPersonTip).toFixed(2)),
         }));
 
+        // Best-effort: the Cloud Function has no concept of tip, so attach
+        // it to the just-created history record as a narrow follow-up write
+        // (see attachTipToHistory). Doesn't block showing the result either
+        // way — the live results above already have tip merged in.
+        if (historyId && tip) {
+          attachTipToHistory(user.uid, historyId, tip).catch((err) => {
+            console.warn('Could not attach tip to history record:', err);
+          });
+        }
+
         dispatch({ type: 'CALCULATE_SUCCESS', results: merged });
       } catch (err) {
         console.error('calculateBill failed:', err);
         dispatch({ type: 'CALCULATE_ERROR', message: mapServerErrorMessage(err, t) });
       }
     },
-    [language, state.flow, t],
+    [language, state.flow, t, user],
   );
 
   return {
