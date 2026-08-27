@@ -37,6 +37,19 @@ export async function deleteHistoryItem(uid, historyDocId) {
   return { action: 'deleted', id: historyDocId };
 }
 
+// The calculateBill Cloud Function has no concept of tip (it's split equally
+// client-side, see useCalculatorFlow.js), so the history record it writes
+// never includes it. Rather than redeploying the Cloud Function, this is a
+// narrow, write-once follow-up update: firestore.rules only allows adding a
+// `tip` field to a history doc that doesn't already have one, and rejects
+// any attempt to also change totals/totalPay/etc — so it can enrich the
+// record for display without reopening the tampering risk the server-side
+// write was built to close.
+export async function attachTipToHistory(uid, historyId, tip) {
+  if (!uid || !historyId || !tip) return;
+  await updateDoc(doc(db, 'users', uid, 'history', historyId), { tip });
+}
+
 // --- Favorites (full CRUD, schema-constrained by firestore.rules) ---
 
 // Deliberately not server-ordered: Firestore's orderBy() excludes any
