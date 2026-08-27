@@ -12,12 +12,25 @@ function formatWhen(createdAt) {
   }
 }
 
+// The stored totals never include tip (see attachTipToHistory) — merge it
+// in the same way the live result screen does, from the raw `tip` amount.
+function withTipMerged(item) {
+  const totals = item.totals || [];
+  if (!item.tip || !totals.length) return totals;
+  const perPersonTip = item.tip / totals.length;
+  return totals.map((p) => ({
+    ...p,
+    tipShare: perPersonTip,
+    totalPay: Number((p.totalPay + perPersonTip).toFixed(2)),
+  }));
+}
+
 export default function HistoryDetailsModal({ item, onClose }) {
   const { t } = useLanguage();
   return (
     <Modal title={formatWhen(item.createdAt) || t.details} onClose={onClose} className="modal--wide">
       <div style={{ marginTop: 10 }}>
-        <ResultCardsGrid results={item.totals || []} />
+        <ResultCardsGrid results={withTipMerged(item)} />
       </div>
     </Modal>
   );
