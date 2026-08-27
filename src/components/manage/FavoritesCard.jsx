@@ -18,6 +18,7 @@ export default function FavoritesCard() {
   const { favorites, loading, add, update, remove, move } = useFavorites(user?.uid);
   const [newName, setNewName] = useState('');
   const [edits, setEdits] = useState({});
+  const [error, setError] = useState('');
   const newFavoriteGuard = useNoAutofillName();
 
   async function handleAdd() {
@@ -31,6 +32,20 @@ export default function FavoritesCard() {
     const newValue = (edits[fav.id] ?? fav.name).trim();
     if (!newValue) return;
     await update(fav, newValue);
+  }
+
+  // move() reverts the optimistic reorder and re-throws on failure (e.g. the
+  // Firestore write being rejected) — without this, that rejection was an
+  // unhandled promise rejection: the row would visibly snap back with no
+  // indication why.
+  async function handleMove(index, direction) {
+    setError('');
+    try {
+      await move(index, direction);
+    } catch (err) {
+      console.error('Reorder failed:', err);
+      setError(err.message || String(err));
+    }
   }
 
   return (
@@ -58,7 +73,7 @@ export default function FavoritesCard() {
                   style={{ padding: '2px 10px' }}
                   title="Move up"
                   disabled={i === 0}
-                  onClick={() => move(i, -1)}
+                  onClick={() => handleMove(i, -1)}
                 >
                   ↑
                 </button>
@@ -68,7 +83,7 @@ export default function FavoritesCard() {
                   style={{ padding: '2px 10px' }}
                   title="Move down"
                   disabled={i === favorites.length - 1}
-                  onClick={() => move(i, 1)}
+                  onClick={() => handleMove(i, 1)}
                 >
                   ↓
                 </button>
@@ -83,6 +98,8 @@ export default function FavoritesCard() {
           ))}
         </div>
       )}
+
+      {error && <div className="error-text" style={{ marginTop: 8 }}>{error}</div>}
     </Card>
   );
 }
