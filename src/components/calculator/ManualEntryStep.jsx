@@ -29,7 +29,10 @@ export default function ManualEntryStep({ names, onBack, onCalculate, calculatin
   const itemsSum = cards.reduce((s, card) => s + personSubtotal(card), 0);
   const subTotalNum = parseFloat(subTotal);
   const hasSubTotal = subTotal !== '' && !isNaN(subTotalNum);
-  const isMismatch = hasSubTotal && Math.abs(itemsSum - subTotalNum) > 2;
+  // itemsSum === 0 (nothing priced in yet) is also "not ready", not a match —
+  // otherwise a small subtotal (e.g. 1 or 2) would fall within the ±2
+  // tolerance against zero and read as a false match.
+  const isMismatch = hasSubTotal && (itemsSum === 0 || Math.abs(itemsSum - subTotalNum) > 2);
 
   function updateRow(personIdx, rowIdx, key, value) {
     setCards((prev) => {

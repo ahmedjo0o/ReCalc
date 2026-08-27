@@ -8,7 +8,11 @@ export default function ItemsSumStatus({ itemsSum, subTotal }) {
   const subTotalNum = parseFloat(subTotal);
   const hasSubTotal = subTotal !== '' && subTotal != null && !isNaN(subTotalNum);
 
-  if (!hasSubTotal) {
+  // Nothing entered yet — don't claim a match just because 0 happens to
+  // fall within the ±2 mismatch tolerance of a small subtotal (e.g.
+  // subtotal 1 or 2 with no items priced in would otherwise read as "✓
+  // match" despite nothing actually having been confirmed).
+  if (!hasSubTotal || itemsSum === 0) {
     return (
       <div className="sum-status sum-status--neutral">
         <span className="sum-status__icon">Σ</span>

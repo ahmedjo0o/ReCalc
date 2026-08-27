@@ -98,6 +98,12 @@ export default function ScanStep({ onBack, onContinue }) {
   }
 
   const itemsSum = items.reduce((s, it) => s + (parseFloat(it.price) || 0), 0);
+  const subTotalNum = parseFloat(subTotal);
+  const hasSubTotal = subTotal !== '' && !isNaN(subTotalNum);
+  // itemsSum === 0 (nothing priced in yet) is also "not ready", not a match —
+  // otherwise a small subtotal (e.g. 1 or 2) would fall within the ±2
+  // tolerance against zero and read as a false match (mirrors ManualEntryStep).
+  const isMismatch = hasSubTotal && (itemsSum === 0 || Math.abs(itemsSum - subTotalNum) > 2);
 
   function continueToNames() {
     const result = validateBillTotals({ totalOrder, subTotal, discount, tip: '0' }, t);
@@ -112,7 +118,7 @@ export default function ScanStep({ onBack, onContinue }) {
       .filter((it) => it.price !== 0);
 
     const sum = cleanItems.reduce((s, it) => s + it.price, 0);
-    if (Math.abs(sum - result.value.subTotal) > 2) {
+    if (sum === 0 || Math.abs(sum - result.value.subTotal) > 2) {
       showMismatchError(t.itemsMismatchError);
       return;
     }
@@ -181,7 +187,7 @@ export default function ScanStep({ onBack, onContinue }) {
 
           <div style={{ marginTop: 16, display: 'flex', gap: 10 }}>
             <Button variant="secondary" onClick={onBack}>{t.backToStart}</Button>
-            <Button variant="primary" onClick={continueToNames}>{t.continueButton}</Button>
+            <Button variant="primary" disabled={isMismatch} onClick={continueToNames}>{t.continueButton}</Button>
           </div>
         </div>
       )}
