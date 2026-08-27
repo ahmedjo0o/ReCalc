@@ -207,8 +207,8 @@
   color: var(--color-text);
 }
 
-.field__label--danger {
-  color: var(--color-danger-label);
+.field__label--highlight {
+  color: var(--color-accent);
 }
 
 .input,
