@@ -1,39 +1,41 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import Button from '../ui/Button.jsx';
 import Card from '../ui/Card.jsx';
+import SharePreviewModal from './SharePreviewModal.jsx';
 import { useLanguage } from '../../context/LanguageContext.jsx';
-import { exportCardsAsImage } from '../../lib/exportImage.js';
+import { renderCardsToDataUrl } from '../../lib/exportImage.js';
 
 export default function ResultStep({ results, onBack, onStartAgain }) {
   const { t, language } = useLanguage();
   const cardRefs = useRef([]);
   cardRefs.current = [];
+  const [preview, setPreview] = useState(null); // { dataUrl, filename }
+  const [rendering, setRendering] = useState(false);
 
   function registerCard(el) {
     if (el) cardRefs.current.push(el);
   }
 
+  async function renderPreview(nodes, filename) {
+    if (!nodes.length) return;
+    setRendering(true);
+    try {
+      const dataUrl = await renderCardsToDataUrl(nodes, new Date().toLocaleDateString(language === 'ar' ? 'ar' : 'en'));
+      setPreview({ dataUrl, filename });
+    } catch (err) {
+      console.error('Could not render share image:', err);
+    } finally {
+      setRendering(false);
+    }
+  }
+
   function shareOne(idx) {
     const node = cardRefs.current[idx];
-    if (!node) return;
-    exportCardsAsImage(
-      [node],
-      'recalc-bill.png',
-      'Your Bill',
-      'Individual Bill Breakdown',
-      new Date().toLocaleDateString(language === 'ar' ? 'ar' : 'en'),
-    );
+    if (node) renderPreview([node], 'recalc-bill.png');
   }
 
   function shareAll() {
-    if (!cardRefs.current.length) return;
-    exportCardsAsImage(
-      cardRefs.current,
-      'recalc-full-results.png',
-      'Receipt Results',
-      'Here is the full receipt breakdown',
-      new Date().toLocaleDateString(language === 'ar' ? 'ar' : 'en'),
-    );
+    renderPreview(cardRefs.current, 'recalc-full-results.png');
   }
 
   return (
@@ -70,8 +72,14 @@ export default function ResultStep({ results, onBack, onStartAgain }) {
       <div style={{ display: 'flex', gap: 10 }}>
         <Button variant="secondary" onClick={onBack}>{t.backButton}</Button>
         <Button variant="primary" onClick={onStartAgain}>{t.startAgainButton}</Button>
-        <Button variant="ghost" onClick={shareAll}>{t.shareResultButton} ({t.resultsTitle})</Button>
+        <Button variant="ghost" loading={rendering} onClick={shareAll}>
+          {t.shareResultButton} ({t.resultsTitle})
+        </Button>
       </div>
+
+      {preview && (
+        <SharePreviewModal dataUrl={preview.dataUrl} filename={preview.filename} onClose={() => setPreview(null)} />
+      )}
     </div>
   );
 }

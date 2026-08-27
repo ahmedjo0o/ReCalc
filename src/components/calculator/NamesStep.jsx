@@ -1,5 +1,6 @@
 import Button from '../ui/Button.jsx';
 import { Field, TextInput } from '../ui/Field.jsx';
+import FavoriteNameField from './FavoriteNameField.jsx';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useFieldError } from '../../hooks/useFieldError.js';
@@ -72,30 +73,15 @@ export default function NamesStep({ numPeople, names, onNumPeopleChange, onNames
               .filter((n) => !name || n.toLowerCase().includes(name.trim().toLowerCase()));
 
             return (
-              <div key={i} style={{ position: 'relative' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <label style={{ minWidth: 90, fontSize: '0.9rem' }}>{t.nameLabel} {i + 1}</label>
-                  <TextInput
-                    value={name}
-                    autoComplete="off"
-                    list={`names-datalist-${i}`}
-                    onChange={(e) => updateName(i, e.target.value)}
-                  />
-                  <datalist id={`names-datalist-${i}`}>
-                    {suggestions.map((n) => (
-                      <option key={n} value={n} />
-                    ))}
-                  </datalist>
-                  <button
-                    type="button"
-                    title="Add/remove favorite"
-                    className="btn btn-ghost btn-sm"
-                    onClick={() => toggleFavoriteFor(name)}
-                  >
-                    {isFav ? '★' : '☆'}
-                  </button>
-                </div>
-              </div>
+              <FavoriteNameField
+                key={i}
+                label={`${t.nameLabel} ${i + 1}`}
+                name={name}
+                suggestions={suggestions}
+                isFav={isFav}
+                onChange={(value) => updateName(i, value)}
+                onToggleFavorite={() => toggleFavoriteFor(name)}
+              />
             );
           })}
         </div>

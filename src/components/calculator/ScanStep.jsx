@@ -7,6 +7,7 @@ import { useFieldError } from '../../hooks/useFieldError.js';
 import { callExtractReceipt } from '../../lib/api.js';
 import { downscaleImageDataUrl } from '../../lib/imageUtils.js';
 import { validateBillTotals } from '../../lib/validation.js';
+import { getServerErrorCode } from '../../lib/errors.js';
 
 export default function ScanStep({ onBack, onContinue }) {
   const { t } = useLanguage();
@@ -68,7 +69,7 @@ export default function ScanStep({ onBack, onContinue }) {
       const parsed = response.data || {};
       populateFields(parsed);
     } catch (err) {
-      const msg = err?.message === 'rateLimitExceeded' ? t.rateLimitError : t.ocrFailedError;
+      const msg = getServerErrorCode(err) === 'rateLimitExceeded' ? t.rateLimitError : t.ocrFailedError;
       showScanError(msg);
       populateFields({ totalOrder: '', subTotal: '', discount: '', items: [] });
     } finally {
