@@ -12,8 +12,11 @@ import {
   orderBy,
   limit,
   serverTimestamp,
+  writeBatch,
 } from 'firebase/firestore';
 import { db } from './firebase.js';
+
+export const DEFAULT_CURRENCY = 'EGP';
 
 // --- History (read/delete only — history.rules blocks client create/update; ---
 // --- entries are written server-side by the calculateBill Cloud Function). ---
@@ -36,11 +39,40 @@ export async function deleteHistoryItem(uid, historyDocId) {
 
 // --- Favorites (full CRUD, schema-constrained by firestore.rules) ---
 
+// Deliberately not server-ordered: Firestore's orderBy() excludes any
+// document missing the ordered field entirely, and existing favorites (from
+// before drag-free reordering was added) have no `order` field yet. Fetching
+// unordered and sorting client-side avoids silently dropping those from the
+// list, and lazily migrates them (an `order` gets written the first time the
+// user reorders anything).
 export async function getFavorites(uid) {
   if (!uid) return [];
-  const ref = query(collection(db, 'users', uid, 'favorites'), orderBy('createdAt', 'desc'));
+  const ref = collection(db, 'users', uid, 'favorites');
   const snap = await getDocs(ref);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const favs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  return sortFavorites(favs);
+}
+
+function sortFavorites(favs) {
+  return [...favs].sort((a, b) => {
+    if (a.order != null && b.order != null) return a.order - b.order;
+    if (a.order != null) return -1;
+    if (b.order != null) return 1;
+    const at = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+    const bt = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+    return bt - at;
+  });
+}
+
+// Persists a full reordering as sequential `order` values in one batch —
+// simpler and more robust than computing a single moved item's new position.
+export async function reorderFavorites(uid, orderedFavorites) {
+  if (!uid) throw new Error('no uid');
+  const batch = writeBatch(db);
+  orderedFavorites.forEach((fav, index) => {
+    batch.update(doc(db, 'users', uid, 'favorites', fav.id), { order: index });
+  });
+  await batch.commit();
 }
 
 export async function addFavorite(uid, favoriteObj) {

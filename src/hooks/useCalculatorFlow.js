@@ -1,6 +1,5 @@
 import { useCallback, useReducer } from 'react';
 import { callCalculateBill } from '../lib/api.js';
-import { localSaveCalculation } from '../lib/localStorageService.js';
 import { mapServerErrorMessage } from '../lib/errors.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useLanguage } from '../context/LanguageContext.jsx';
@@ -77,36 +76,18 @@ export function useCalculatorFlow() {
           localeLang: language,
           source: state.flow === 'scan' ? 'scan' : 'manual',
         });
-        const { results, vat, historyId } = response.data;
+        const { results } = response.data;
 
+        // The Cloud Function persists history itself for signed-in callers
+        // (via context.auth, never a client-supplied uid). Guests get
+        // nothing saved anywhere — no localStorage fallback — by design:
+        // a guest's results exist only in memory for this session.
         const perPersonTip = totals.length ? tip / totals.length : 0;
         const merged = results.map((r) => ({
           ...r,
           tipShare: perPersonTip,
           totalPay: Number((r.totalPay + perPersonTip).toFixed(2)),
         }));
-
-        // The Cloud Function already persisted history for signed-in users.
-        // For guests, historyId comes back null — fall back to the same
-        // local-storage save guests have always used.
-        if (!historyId) {
-          try {
-            localSaveCalculation({
-              createdAt: new Date().toISOString(),
-              totalOrder,
-              subTotal,
-              discount,
-              tip,
-              vat,
-              totals: merged,
-              resultsSummary: merged.map((r) => ({ name: r.name, sum: r.sum })),
-              localeLang: language,
-              source: state.flow === 'scan' ? 'scan' : 'manual',
-            });
-          } catch (err) {
-            console.warn('Could not save calculation locally:', err);
-          }
-        }
 
         dispatch({ type: 'CALCULATE_SUCCESS', results: merged });
       } catch (err) {

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Button from '../components/ui/Button.jsx';
 import HistoryEntryCard from '../components/history/HistoryEntryCard.jsx';
+import SignInRequired from '../components/auth/SignInRequired.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useLanguage } from '../context/LanguageContext.jsx';
 import { useHistory } from '../hooks/useHistory.js';
@@ -9,15 +10,24 @@ const ITEMS_PER_PAGE = 15;
 
 export default function HistoryPage() {
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { items, loading, remove, clearAll } = useHistory(user?.uid, 1000);
   const [page, setPage] = useState(1);
 
   async function handleDeleteAll() {
     if (!confirm(t.alertConfirmDeleteAll)) return;
     await clearAll();
-    alert(user?.uid ? t.alertHistoryDeleted : t.alertLocalHistoryDeleted);
+    alert(t.alertHistoryDeleted);
     setPage(1);
+  }
+
+  if (!authLoading && !user) {
+    return (
+      <main>
+        <h1 className="page-title">{t.manageHistoryTitle}</h1>
+        <SignInRequired message={t.signInRequiredHistory} />
+      </main>
+    );
   }
 
   const totalPages = items ? Math.max(1, Math.ceil(items.length / ITEMS_PER_PAGE)) : 1;

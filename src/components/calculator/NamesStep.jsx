@@ -5,6 +5,19 @@ import { useLanguage } from '../../context/LanguageContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useFieldError } from '../../hooks/useFieldError.js';
 import { useFavorites } from '../../hooks/useFavorites.js';
+import { useNoAutofillName } from '../../hooks/useNoAutofillName.js';
+
+// Plain name field for guests — favorites are a signed-in-only feature, so
+// there's no star toggle or autocomplete suggestions to show them.
+function PlainNameField({ label, name, onChange }) {
+  const autofillGuard = useNoAutofillName();
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <label style={{ minWidth: 90, fontSize: '0.9rem' }}>{label}</label>
+      <TextInput {...autofillGuard} value={name} onChange={(e) => onChange(e.target.value)} />
+    </div>
+  );
+}
 
 export default function NamesStep({ numPeople, names, onNumPeopleChange, onNamesChange, onBack, onNext }) {
   const { t } = useLanguage();
@@ -64,6 +77,12 @@ export default function NamesStep({ numPeople, names, onNumPeopleChange, onNames
       {names.length > 0 && (
         <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
           {names.map((name, i) => {
+            if (!user) {
+              return (
+                <PlainNameField key={i} label={`${t.nameLabel} ${i + 1}`} name={name} onChange={(value) => updateName(i, value)} />
+              );
+            }
+
             const lower = name.trim().toLowerCase();
             const isFav = !!lower && (favorites || []).some((f) => (f.name || '').trim().toLowerCase() === lower);
             const suggestions = (favorites || [])

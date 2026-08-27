@@ -1,40 +1,39 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getUserHistory, deleteHistoryItem } from '../lib/firestoreService.js';
-import { localGetHistory, localDeleteHistory, localClearHistory } from '../lib/localStorageService.js';
 
-// Wraps the Firestore/localStorage history CRUD behind one hook, used by the
-// Manage page's recent-history preview (limitCount=3) and the full,
-// paginated History page (limitCount=1000).
+// History is a signed-in-only feature — no localStorage fallback for guests.
+// Every mutator below is a no-op without a uid; callers (the Manage page's
+// history preview and the full History page, both gated on auth) should
+// never invoke them for a guest anyway.
 export function useHistory(uid, limitCount = 20) {
-  const [items, setItems] = useState(null);
+  const [items, setItems] = useState(uid ? null : []);
 
   const reload = useCallback(async () => {
-    const list = uid
-      ? await getUserHistory(uid, limitCount)
-      : (localGetHistory() || []).slice(0, limitCount);
+    if (!uid) {
+      setItems([]);
+      return [];
+    }
+    const list = await getUserHistory(uid, limitCount);
     setItems(list);
     return list;
   }, [uid, limitCount]);
 
   useEffect(() => {
-    setItems(null);
+    setItems(uid ? null : []);
     reload();
-  }, [reload]);
+  }, [uid, reload]);
 
   async function remove(item) {
-    if (uid) await deleteHistoryItem(uid, item.id);
-    else localDeleteHistory(item.createdAt);
+    if (!uid) return;
+    await deleteHistoryItem(uid, item.id);
     return reload();
   }
 
   async function clearAll() {
-    if (uid) {
-      await Promise.all((items || []).map((item) => deleteHistoryItem(uid, item.id)));
-    } else {
-      localClearHistory();
-    }
+    if (!uid) return;
+    await Promise.all((items || []).map((item) => deleteHistoryItem(uid, item.id)));
     return reload();
   }
 
-  return { items, loading: items === null, reload, remove, clearAll };
+  return { items, loading: uid ? items === null : false, reload, remove, clearAll };
 }

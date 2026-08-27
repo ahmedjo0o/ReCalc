@@ -5,9 +5,10 @@ import { Field, TextInput, Select } from '../ui/Field.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 import { CURRENCIES } from '../../i18n/translations.js';
-import { getUserProfile, setUserCurrency } from '../../lib/firestoreService.js';
-import { DEFAULT_CURRENCY, localGetCurrency, localSetCurrency } from '../../lib/localStorageService.js';
+import { getUserProfile, setUserCurrency, DEFAULT_CURRENCY } from '../../lib/firestoreService.js';
 
+// Only ever rendered when signed in — ManagePage gates the whole page on
+// auth — so this assumes `user` is always present.
 export default function ProfileCard() {
   const { t } = useLanguage();
   const { user, updateDisplayName, changePassword } = useAuth();
@@ -29,12 +30,8 @@ export default function ProfileCard() {
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      if (user?.uid) {
-        const profile = await getUserProfile(user.uid);
-        if (!cancelled) setCurrency(profile?.currency || DEFAULT_CURRENCY);
-      } else {
-        setCurrency(localGetCurrency());
-      }
+      const profile = await getUserProfile(user.uid);
+      if (!cancelled) setCurrency(profile?.currency || DEFAULT_CURRENCY);
     }
     load();
     return () => {
@@ -44,10 +41,6 @@ export default function ProfileCard() {
 
   async function handleSaveName() {
     setMessage('');
-    if (!user) {
-      setMessage(t.signInPrompt);
-      return;
-    }
     try {
       await updateDisplayName(displayName.trim());
       setMessage(t.savedToFavorites);
@@ -58,20 +51,12 @@ export default function ProfileCard() {
 
   async function handleCurrencyChange(next) {
     setCurrency(next);
-    if (user?.uid) {
-      await setUserCurrency(user.uid, next);
-    } else {
-      localSetCurrency(next);
-    }
+    await setUserCurrency(user.uid, next);
     setMessage(t.currencyUpdated);
   }
 
   async function handleChangePassword() {
     setMessage('');
-    if (!user) {
-      setMessage(t.signInPrompt);
-      return;
-    }
     if (!newPassword) {
       setMessage(t.newPasswordPlaceholder);
       return;
@@ -93,12 +78,7 @@ export default function ProfileCard() {
     <Card header={t.manageProfileTitle}>
       <Field label={t.profileDisplayName}>
         <div style={{ display: 'flex', gap: 8 }}>
-          <TextInput
-            value={displayName}
-            placeholder={user ? '' : t.guestLabel}
-            disabled={!user}
-            onChange={(e) => setDisplayName(e.target.value)}
-          />
+          <TextInput value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
           <Button variant="secondary" size="sm" onClick={handleSaveName}>{t.saveButton}</Button>
         </div>
       </Field>
@@ -134,7 +114,6 @@ export default function ProfileCard() {
       </Field>
 
       {message && <div style={{ fontSize: 13, color: '#333', marginTop: 4 }}>{message}</div>}
-      {!user && <div style={{ fontSize: 12, color: '#555', marginTop: 10 }}>{t.manageNote}</div>}
     </Card>
   );
 }

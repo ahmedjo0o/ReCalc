@@ -15,7 +15,7 @@ function FavoriteEditInput({ value, onChange }) {
 export default function FavoritesCard() {
   const { t } = useLanguage();
   const { user } = useAuth();
-  const { favorites, loading, add, update, remove } = useFavorites(user?.uid);
+  const { favorites, loading, add, update, remove, move } = useFavorites(user?.uid);
   const [newName, setNewName] = useState('');
   const [edits, setEdits] = useState({});
   const newFavoriteGuard = useNoAutofillName();
@@ -49,8 +49,30 @@ export default function FavoritesCard() {
       {!loading && favorites.length === 0 && <p>{t.noFavoritesYet}</p>}
       {!loading && favorites.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {favorites.map((fav) => (
-            <div key={fav.id} style={{ display: 'flex', gap: 8 }}>
+          {favorites.map((fav, i) => (
+            <div key={fav.id} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  style={{ padding: '2px 10px' }}
+                  title="Move up"
+                  disabled={i === 0}
+                  onClick={() => move(i, -1)}
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  style={{ padding: '2px 10px' }}
+                  title="Move down"
+                  disabled={i === favorites.length - 1}
+                  onClick={() => move(i, 1)}
+                >
+                  ↓
+                </button>
+              </div>
               <FavoriteEditInput
                 value={edits[fav.id] ?? fav.name}
                 onChange={(e) => setEdits((prev) => ({ ...prev, [fav.id]: e.target.value }))}
