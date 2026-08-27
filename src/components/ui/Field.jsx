@@ -1,3 +1,5 @@
+import { forwardRef } from 'react';
+
 let uid = 0;
 
 export function Field({ label, highlight = false, error, children }) {
@@ -15,10 +17,10 @@ export function Field({ label, highlight = false, error, children }) {
   );
 }
 
-export function TextInput({ id, className = '', ...rest }) {
+export const TextInput = forwardRef(function TextInput({ id, className = '', ...rest }, ref) {
   const autoId = id || `field-${++uid}`;
-  return <input id={autoId} className={`input ${className}`.trim()} {...rest} />;
-}
+  return <input ref={ref} id={autoId} className={`input ${className}`.trim()} {...rest} />;
+});
 
 export function Select({ id, className = '', children, ...rest }) {
   const autoId = id || `field-${++uid}`;
