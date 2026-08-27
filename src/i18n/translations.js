@@ -140,6 +140,9 @@ export const translations = {
     itemsRemainingOver: 'Remove {amount} worth of items to match the subtotal',
     itemsRemainingUnder: 'Add {amount} more to match the subtotal',
     itemNumberLabel: 'Item {n}',
+    preparingImageMessage: 'Preparing image…',
+    saveImageButton: 'Save Image',
+    shareImageTitle: 'Your bill',
   },
   ar: {
     pageTitle: 'reCalc - احسب فاتورتك مع أصدقائك',
@@ -276,6 +279,9 @@ export const translations = {
     itemsRemainingOver: 'احذف أصنافًا بقيمة {amount} لتطابق المجموع الفرعي',
     itemsRemainingUnder: 'أضف {amount} أخرى لتطابق المجموع الفرعي',
     itemNumberLabel: 'صنف {n}',
+    preparingImageMessage: 'جارٍ تجهيز الصورة…',
+    saveImageButton: 'حفظ الصورة',
+    shareImageTitle: 'فاتورتك',
   },
 };
 
