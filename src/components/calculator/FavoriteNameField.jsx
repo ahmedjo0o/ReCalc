@@ -8,6 +8,12 @@ import { TextInput } from '../ui/Field.jsx';
 export default function FavoriteNameField({ label, name, suggestions, isFav, onChange, onToggleFavorite }) {
   const [open, setOpen] = useState(false);
   const blurTimer = useRef(null);
+  // Chrome ignores autocomplete="off" for fields its heuristics classify as
+  // a "name" field (it reads the associated label text, not just the name/id
+  // attributes) and shows its own Addresses autofill panel on top of ours.
+  // A randomized `name` attribute — different every mount — stops Chrome's
+  // per-field autofill matching from locking onto this input.
+  const randomFieldName = useRef(`person-name-${Math.random().toString(36).slice(2)}`);
 
   function handleFocus() {
     clearTimeout(blurTimer.current);
@@ -32,6 +38,7 @@ export default function FavoriteNameField({ label, name, suggestions, isFav, onC
       <div className="autocomplete">
         <TextInput
           value={name}
+          name={randomFieldName.current}
           autoComplete="off"
           onChange={(e) => {
             onChange(e.target.value);
