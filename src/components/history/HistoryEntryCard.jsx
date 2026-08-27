@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import Card from '../ui/Card.jsx';
+import HistoryDetailsModal from './HistoryDetailsModal.jsx';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 
 function formatWhen(createdAt) {
@@ -13,8 +15,15 @@ function formatWhen(createdAt) {
 
 export default function HistoryEntryCard({ item, onDelete }) {
   const { t } = useLanguage();
+  const [showDetails, setShowDetails] = useState(false);
   const total = Number(item.totalOrder ?? item.total ?? 0).toFixed(2);
   const subTotal = Number(item.subTotal ?? item.subtotal ?? 0).toFixed(2);
+
+  function handleDelete() {
+    if (confirm(t.alertConfirmDeleteOne)) {
+      onDelete(item);
+    }
+  }
 
   return (
     <Card header={formatWhen(item.createdAt)}>
@@ -41,11 +50,16 @@ export default function HistoryEntryCard({ item, onDelete }) {
         </div>
       ))}
 
-      <div style={{ marginTop: 10, textAlign: 'right' }}>
-        <button type="button" className="btn btn-danger btn-sm" onClick={() => onDelete(item)}>
+      <div style={{ marginTop: 10, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+        <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowDetails(true)}>
+          {t.details}
+        </button>
+        <button type="button" className="btn btn-danger btn-sm" onClick={handleDelete}>
           {t.deleteButton}
         </button>
       </div>
+
+      {showDetails && <HistoryDetailsModal item={item} onClose={() => setShowDetails(false)} />}
     </Card>
   );
 }
