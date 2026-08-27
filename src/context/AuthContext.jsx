@@ -4,6 +4,8 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signOut as firebaseSignOut,
   GoogleAuthProvider,
   updateProfile,
@@ -17,6 +19,14 @@ import { auth } from '../lib/firebase.js';
 
 const AuthContext = createContext(null);
 
+// signInWithPopup is unreliable on Safari (ITP blocks the third-party storage
+// access the popup handshake needs, and mobile Safari often blocks the popup
+// outright) and can misfire on desktop too when third-party cookies are
+// restricted. These are the error codes that mean "the popup flow itself
+// didn't work", as opposed to the user deliberately cancelling — worth
+// falling back to a full-page redirect for.
+const POPUP_FALLBACK_CODES = ['auth/popup-blocked', 'auth/popup-closed-by-user', 'auth/cancelled-popup-request'];
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -27,6 +37,14 @@ export function AuthProvider({ children }) {
       setLoading(false);
     });
     return unsubscribe;
+  }, []);
+
+  // Picks up the result once the browser comes back from a signInWithRedirect
+  // round-trip (onAuthStateChanged above will also fire once this resolves).
+  useEffect(() => {
+    getRedirectResult(auth).catch((err) => {
+      console.error('Google redirect sign-in failed:', err);
+    });
   }, []);
 
   async function signUp(email, password, displayName = '') {
@@ -44,8 +62,20 @@ export function AuthProvider({ children }) {
   }
 
   async function signInWithGoogle() {
-    const cred = await signInWithPopup(auth, new GoogleAuthProvider());
-    return cred.user;
+    const provider = new GoogleAuthProvider();
+    try {
+      const cred = await signInWithPopup(auth, provider);
+      return cred.user;
+    } catch (err) {
+      if (POPUP_FALLBACK_CODES.includes(err.code)) {
+        // Full-page redirect instead — this navigates away, so there's no
+        // user to return here; the caller's UI unmounts, and the signed-in
+        // user shows up via onAuthStateChanged once the browser returns.
+        await signInWithRedirect(auth, provider);
+        return null;
+      }
+      throw err;
+    }
   }
 
   async function logout() {
