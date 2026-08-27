@@ -401,6 +401,12 @@
   width: 100%;
   max-width: 380px;
   border-radius: 18px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal--wide {
+  max-width: 900px;
 }
 
 .modal__head {
