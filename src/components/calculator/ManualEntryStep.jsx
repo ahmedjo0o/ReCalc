@@ -73,10 +73,10 @@ export default function ManualEntryStep({ names, onBack, onCalculate, calculatin
 
   return (
     <div className="step">
-      <Field label={t.totalOrder} danger error={fieldErrors.totalOrder}>
+      <Field label={t.totalOrder} highlight error={fieldErrors.totalOrder}>
         <TextInput type="number" step="0.01" value={totalOrder} onChange={(e) => setTotalOrder(e.target.value)} />
       </Field>
-      <Field label={t.subTotal} danger error={fieldErrors.subTotal}>
+      <Field label={t.subTotal} highlight error={fieldErrors.subTotal}>
         <TextInput type="number" step="0.01" value={subTotal} onChange={(e) => setSubTotal(e.target.value)} />
       </Field>
       <Field label={t.discount} error={fieldErrors.discount}>

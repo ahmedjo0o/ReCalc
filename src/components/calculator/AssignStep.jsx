@@ -72,10 +72,10 @@ export default function AssignStep({ names, scannedReceipt, onBack, onCalculate,
       <h2 className="page-title" style={{ fontSize: '1.2rem' }}>{t.assignStepTitle}</h2>
       <p className="page-subtitle">{t.assignStepSubtitle}</p>
 
-      <Field label={t.totalOrder} danger error={fieldErrors.totalOrder}>
+      <Field label={t.totalOrder} highlight error={fieldErrors.totalOrder}>
         <TextInput type="number" step="0.01" value={totalOrder} onChange={(e) => setTotalOrder(e.target.value)} />
       </Field>
-      <Field label={t.subTotal} danger error={fieldErrors.subTotal}>
+      <Field label={t.subTotal} highlight error={fieldErrors.subTotal}>
         <TextInput type="number" step="0.01" value={subTotal} onChange={(e) => setSubTotal(e.target.value)} />
       </Field>
       <Field label={t.discount} error={fieldErrors.discount}>
