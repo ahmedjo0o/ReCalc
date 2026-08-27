@@ -1,11 +1,11 @@
 let uid = 0;
 
-export function Field({ label, danger = false, error, children }) {
+export function Field({ label, highlight = false, error, children }) {
   const id = children?.props?.id;
   return (
     <div className="field">
       {label && (
-        <label htmlFor={id} className={`field__label${danger ? ' field__label--danger' : ''}`}>
+        <label htmlFor={id} className={`field__label${highlight ? ' field__label--highlight' : ''}`}>
           {label}
         </label>
       )}
