@@ -2,10 +2,9 @@ import html2canvas from 'html2canvas';
 
 // Builds an off-screen wrapper that mirrors reCalc's brand look (gradient
 // background, logo header, clean opaque cards, footer), renders it via
-// html2canvas at 2x+ scale for crisp quality, then shares/downloads it.
-// Ported from the legacy calculator.js buildExportWrapper/exportCardsAsImage,
-// cloning the live card node(s) rather than screenshotting the page directly
-// so we never have to fight backdrop-filter/blur.
+// html2canvas at 2x+ scale for crisp quality. Cloning the live card node(s)
+// rather than screenshotting the page directly means we never have to fight
+// backdrop-filter/blur.
 function buildExportWrapper(cardNodes, dateLabel) {
   const wrapper = document.createElement('div');
   wrapper.style.cssText = `
@@ -54,35 +53,38 @@ function buildExportWrapper(cardNodes, dateLabel) {
   return wrapper;
 }
 
-export function exportCardsAsImage(cardNodes, filename, shareTitle, shareText, dateLabel) {
-  if (!cardNodes || !cardNodes.length) return;
-  const wrapper = buildExportWrapper(cardNodes, dateLabel);
-  document.body.appendChild(wrapper);
+// Renders the given card node(s) to a PNG data URL. This is deliberately the
+// *only* thing this module does now — it used to also call navigator.share()
+// / trigger a download right after rendering, but that happens too long
+// after the user's tap (html2canvas rendering isn't instant) for mobile
+// browsers to still treat it as "in response to a user gesture", so
+// navigator.share() would silently reject (Safari) or the popup/download
+// would get blocked. The caller shows this image in a preview and lets the
+// user tap an explicit Save/Share button — *that* tap is a fresh gesture.
+export function renderCardsToDataUrl(cardNodes, dateLabel) {
+  return new Promise((resolve, reject) => {
+    if (!cardNodes || !cardNodes.length) {
+      resolve(null);
+      return;
+    }
+    const wrapper = buildExportWrapper(cardNodes, dateLabel);
+    document.body.appendChild(wrapper);
 
-  // Small delay so the cloned DOM/fonts settle before rasterizing.
-  setTimeout(() => {
-    html2canvas(wrapper, {
-      backgroundColor: null,
-      useCORS: true,
-      scale: Math.max(2, window.devicePixelRatio || 2),
-    })
-      .then((canvas) => {
-        wrapper.remove();
-        canvas.toBlob((blob) => {
-          const file = new File([blob], filename, { type: 'image/png' });
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            navigator.share({ files: [file], title: shareTitle, text: shareText }).catch(console.error);
-          } else {
-            const link = document.createElement('a');
-            link.download = filename;
-            link.href = URL.createObjectURL(file);
-            link.click();
-          }
-        });
+    // Small delay so the cloned DOM/fonts settle before rasterizing.
+    setTimeout(() => {
+      html2canvas(wrapper, {
+        backgroundColor: null,
+        useCORS: true,
+        scale: Math.max(2, window.devicePixelRatio || 2),
       })
-      .catch((err) => {
-        wrapper.remove();
-        console.error('html2canvas error:', err);
-      });
-  }, 100);
+        .then((canvas) => {
+          wrapper.remove();
+          resolve(canvas.toDataURL('image/png'));
+        })
+        .catch((err) => {
+          wrapper.remove();
+          reject(err);
+        });
+    }, 100);
+  });
 }
