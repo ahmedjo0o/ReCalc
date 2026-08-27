@@ -5,6 +5,12 @@ import { TextInput } from '../ui/Field.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 import { useFavorites } from '../../hooks/useFavorites.js';
+import { useNoAutofillName } from '../../hooks/useNoAutofillName.js';
+
+function FavoriteEditInput({ value, onChange }) {
+  const autofillGuard = useNoAutofillName();
+  return <TextInput {...autofillGuard} value={value} onChange={onChange} />;
+}
 
 export default function FavoritesCard() {
   const { t } = useLanguage();
@@ -12,6 +18,7 @@ export default function FavoritesCard() {
   const { favorites, loading, add, update, remove } = useFavorites(user?.uid);
   const [newName, setNewName] = useState('');
   const [edits, setEdits] = useState({});
+  const newFavoriteGuard = useNoAutofillName();
 
   async function handleAdd() {
     const name = newName.trim();
@@ -30,6 +37,7 @@ export default function FavoritesCard() {
     <Card header={t.manageFavoritesTitle}>
       <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
         <TextInput
+          {...newFavoriteGuard}
           placeholder={t.addFavoritePlaceholder}
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
@@ -43,7 +51,7 @@ export default function FavoritesCard() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {favorites.map((fav) => (
             <div key={fav.id} style={{ display: 'flex', gap: 8 }}>
-              <TextInput
+              <FavoriteEditInput
                 value={edits[fav.id] ?? fav.name}
                 onChange={(e) => setEdits((prev) => ({ ...prev, [fav.id]: e.target.value }))}
               />
