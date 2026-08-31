@@ -19,30 +19,11 @@ import { auth } from '../lib/firebase.js';
 
 const AuthContext = createContext(null);
 
-// signInWithPopup is unreliable on Safari (ITP blocks the third-party storage
-// access the popup handshake needs, and mobile Safari often blocks the popup
-// outright) and can misfire on desktop too when third-party cookies are
-// restricted. These are the error codes that mean "the popup flow itself
-// didn't work", as opposed to the user deliberately cancelling — worth
-// falling back to a full-page redirect for.
+// Error codes that mean "the popup flow itself didn't work" (blocked,
+// closed before completing, superseded by another popup request) — as
+// opposed to a real auth failure — worth falling back to a full-page
+// redirect for, on any platform.
 const POPUP_FALLBACK_CODES = ['auth/popup-blocked', 'auth/popup-closed-by-user', 'auth/cancelled-popup-request'];
-
-// On mobile, signInWithPopup frequently doesn't fail fast — the browser
-// tries to open something popup-like, the handshake can't complete, and
-// Firebase only gives up after its own ~minute-long internal timeout before
-// the catch block below falls back to redirect. That's the "button spins
-// for a minute" symptom. Skip the doomed popup attempt on mobile entirely
-// and go straight to the redirect, which works reliably everywhere.
-function isMobileBrowser() {
-  return typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-}
-
-// Marks "we just sent the browser off to Google and are expecting it back"
-// so the redirect-result effect below can tell a genuine failure (we were
-// expecting a result and didn't get one) apart from the *normal* case of
-// getRedirectResult() resolving null on every ordinary page load that never
-// involved a redirect at all.
-const REDIRECT_PENDING_KEY = 'recalc_google_redirect_pending';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -58,40 +39,12 @@ export function AuthProvider({ children }) {
 
   // Picks up the result once the browser comes back from a signInWithRedirect
   // round-trip (onAuthStateChanged above will also fire once this resolves).
-  // getRedirectResult() resolves null on *every* ordinary page load that
-  // never involved a redirect — that's expected, not an error — so this
-  // only reports something when REDIRECT_PENDING_KEY says we were actually
-  // expecting a result back.
+  // Resolves null on every ordinary page load that never involved a
+  // redirect — that's expected, not logged as an error.
   useEffect(() => {
-    const wasExpectingRedirect = sessionStorage.getItem(REDIRECT_PENDING_KEY) === '1';
-
-    getRedirectResult(auth)
-      .then((result) => {
-        if (!wasExpectingRedirect) return;
-        sessionStorage.removeItem(REDIRECT_PENDING_KEY);
-        if (!result) {
-          console.error(
-            'Google redirect sign-in: expected a result but got none. The browser likely could not ' +
-              'persist auth state across the redirect to Google and back — common in Private/Incognito ' +
-              'mode, or when the page was opened inside an in-app browser (Instagram/Facebook/TikTok/' +
-              'WhatsApp link preview) rather than Safari/Chrome directly.',
-          );
-          alert(
-            "Sign-in didn't complete. If you opened this page from a link inside another app " +
-              '(Instagram, Facebook, TikTok, WhatsApp, etc.), try opening it in Safari or Chrome directly ' +
-              'instead — in-app browsers often block the sign-in redirect.',
-          );
-        }
-      })
-      .catch((err) => {
-        if (!wasExpectingRedirect) {
-          console.error('Google redirect sign-in failed:', err);
-          return;
-        }
-        sessionStorage.removeItem(REDIRECT_PENDING_KEY);
-        console.error('Google redirect sign-in failed:', err.code, err.message);
-        alert('Google sign-in failed: ' + (err.code || err.message || err));
-      });
+    getRedirectResult(auth).catch((err) => {
+      console.error('Google redirect sign-in failed:', err.code, err.message);
+    });
   }, []);
 
   async function signUp(email, password, displayName = '') {
@@ -110,13 +63,6 @@ export function AuthProvider({ children }) {
 
   async function signInWithGoogle() {
     const provider = new GoogleAuthProvider();
-
-    if (isMobileBrowser()) {
-      sessionStorage.setItem(REDIRECT_PENDING_KEY, '1');
-      await signInWithRedirect(auth, provider);
-      return null;
-    }
-
     try {
       const cred = await signInWithPopup(auth, provider);
       return cred.user;
@@ -125,7 +71,6 @@ export function AuthProvider({ children }) {
         // Full-page redirect instead — this navigates away, so there's no
         // user to return here; the caller's UI unmounts, and the signed-in
         // user shows up via onAuthStateChanged once the browser returns.
-        sessionStorage.setItem(REDIRECT_PENDING_KEY, '1');
         await signInWithRedirect(auth, provider);
         return null;
       }
