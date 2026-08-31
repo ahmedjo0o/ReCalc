@@ -8,7 +8,13 @@ import { getFunctions } from 'firebase/functions';
 // not a secret; access is enforced by firestore.rules and Cloud Function checks.
 const firebaseConfig = {
   apiKey: 'AIzaSyAKbxlBH2LiHo8Nfv5806V0gYgfLdgkO1E',
-  authDomain: 'recalc-app.firebaseapp.com',
+  // Custom auth domain (same registrable domain as the app itself) instead
+  // of the default recalc-app.firebaseapp.com — the whole Google sign-in
+  // round-trip now stays same-site, which is what Safari's Intelligent
+  // Tracking Prevention requires to let it persist auth state across the
+  // redirect to Google and back (that's what silently broke sign-in on iOS
+  // Safari: firebaseapp.com is a different site from re-calc.com).
+  authDomain: 'auth.re-calc.com',
   projectId: 'recalc-app',
   storageBucket: 'recalc-app.firebasestorage.app',
   messagingSenderId: '1019107009825',
