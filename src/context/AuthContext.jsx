@@ -27,6 +27,16 @@ const AuthContext = createContext(null);
 // falling back to a full-page redirect for.
 const POPUP_FALLBACK_CODES = ['auth/popup-blocked', 'auth/popup-closed-by-user', 'auth/cancelled-popup-request'];
 
+// On mobile, signInWithPopup frequently doesn't fail fast — the browser
+// tries to open something popup-like, the handshake can't complete, and
+// Firebase only gives up after its own ~minute-long internal timeout before
+// the catch block below falls back to redirect. That's the "button spins
+// for a minute" symptom. Skip the doomed popup attempt on mobile entirely
+// and go straight to the redirect, which works reliably everywhere.
+function isMobileBrowser() {
+  return typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -63,6 +73,12 @@ export function AuthProvider({ children }) {
 
   async function signInWithGoogle() {
     const provider = new GoogleAuthProvider();
+
+    if (isMobileBrowser()) {
+      await signInWithRedirect(auth, provider);
+      return null;
+    }
+
     try {
       const cred = await signInWithPopup(auth, provider);
       return cred.user;
