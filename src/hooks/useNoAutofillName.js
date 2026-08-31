@@ -18,11 +18,21 @@ import { useRef, useState } from 'react';
 //   - readOnly until the instant of focus — Chrome decides autofill
 //     eligibility from the field's readOnly state at focus time; flipping it
 //     off a frame later (restoring focus after) means Chrome never gets the
-//     chance to treat it as editable for that focus event.
+//     chance to treat it as editable for that focus event. Desktop-only:
+//     mobile browsers only show the virtual keyboard when focus lands on an
+//     already-editable field as a direct, synchronous result of the tap —
+//     the re-focus here happens a frame later via requestAnimationFrame, so
+//     on mobile it would leave the field focused but keyboardless. Mobile
+//     autofill suggestions are a keyboard-bar chip, not a disruptive overlay
+//     like desktop Chrome's, so skipping the trick there costs nothing.
 //   - a randomized `name` attribute — stops Chrome's per-field autofill
 //     memory from locking onto this field across renders.
+function isMobileDevice() {
+  return typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+}
+
 export function useNoAutofillName() {
-  const [locked, setLocked] = useState(true);
+  const [locked, setLocked] = useState(!isMobileDevice());
   const inputRef = useRef(null);
   const fieldName = useRef(`f-${Math.random().toString(36).slice(2)}`);
 
