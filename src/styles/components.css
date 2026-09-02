@@ -6,15 +6,26 @@
   flex-direction: column;
 }
 
+/* Grid, not flex: two equal 1fr side columns mathematically guarantee the
+   middle (logo) column stays centered on the container, regardless of
+   screen size or how wide the auth box in the right column gets — a flex
+   row with justify-content:space-between only "looks" centered when both
+   side items happen to be the same width, which the auth box never
+   reliably is (spinner vs. "Welcome, Guest" + a button vs. name+Manage+
+   Logout all differ a lot). */
 .top-bar {
   max-width: 1000px;
   width: 90%;
   margin: 24px auto 0;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
+}
+
+.top-bar__logo {
+  grid-column: 2;
+  justify-self: center;
 }
 
 .top-bar__logo img {
@@ -22,10 +33,9 @@
   display: block;
 }
 
-.top-bar__actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.auth-box-row {
+  grid-column: 3;
+  justify-self: end;
 }
 
 .auth-box {
@@ -40,16 +50,19 @@
   box-shadow: 0 4px 12px rgba(0, 20, 50, 0.08);
 }
 
-/* On narrow screens, the auth box's content width swings a lot between
-   states (a small spinner vs. "Welcome, Guest" + a button) — left to wrap
-   naturally, that made it visually jump between "fits next to the logo" and
-   "wraps to its own line". Forcing it onto its own full-width, centered row
-   at all times means only the box's own size changes, never its position. */
+/* On narrow screens the auth box (name + Manage + Logout, potentially long)
+   risks not fitting its 1fr column without crowding the centered logo —
+   drop it to its own full-width row below instead. The logo stays put in
+   row 1, still perfectly centered between two equal, now-empty columns. */
 @media (max-width: 640px) {
+  .top-bar {
+    grid-template-rows: auto auto;
+  }
+
   .auth-box-row {
-    flex-basis: 100%;
-    display: flex;
-    justify-content: center;
+    grid-row: 2;
+    grid-column: 1 / -1;
+    justify-self: center;
   }
 }
 
@@ -512,6 +525,10 @@
   margin-top: auto;
   padding: 26px 16px 32px;
   text-align: center;
+}
+
+.site-footer > .btn {
+  margin-bottom: 14px;
 }
 
 .site-footer__links {
