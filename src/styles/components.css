@@ -40,6 +40,19 @@
   box-shadow: 0 4px 12px rgba(0, 20, 50, 0.08);
 }
 
+/* On narrow screens, the auth box's content width swings a lot between
+   states (a small spinner vs. "Welcome, Guest" + a button) — left to wrap
+   naturally, that made it visually jump between "fits next to the logo" and
+   "wraps to its own line". Forcing it onto its own full-width, centered row
+   at all times means only the box's own size changes, never its position. */
+@media (max-width: 640px) {
+  .auth-box-row {
+    flex-basis: 100%;
+    display: flex;
+    justify-content: center;
+  }
+}
+
 .auth-box__spinner {
   width: 18px;
   height: 18px;
