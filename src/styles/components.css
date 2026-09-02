@@ -28,6 +28,27 @@
   gap: 10px;
 }
 
+.auth-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0, 20, 50, 0.08);
+}
+
+.auth-box__spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 71, 148, 0.2);
+  border-top-color: var(--color-accent);
+  animation: btn-spin 0.7s linear infinite;
+}
+
 .glass-panel {
   background: var(--color-surface);
   padding: clamp(20px, 4vw, 36px);
