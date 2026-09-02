@@ -1,4 +1,8 @@
-import html2canvas from 'html2canvas';
+// html2canvas is a fairly large library only ever needed if someone actually
+// taps Share on a result — importing it dynamically (below) keeps it out of
+// the initial bundle everyone downloads on every visit, so there's less JS
+// to fetch/parse/execute before the app (and the Firebase session check
+// that starts as soon as the app's code runs) is even up.
 
 // Builds an off-screen wrapper that mirrors reCalc's brand look (gradient
 // background, logo header, clean opaque cards, footer), renders it via
@@ -61,15 +65,14 @@ function buildExportWrapper(cardNodes, dateLabel) {
 // navigator.share() would silently reject (Safari) or the popup/download
 // would get blocked. The caller shows this image in a preview and lets the
 // user tap an explicit Save/Share button — *that* tap is a fresh gesture.
-export function renderCardsToDataUrl(cardNodes, dateLabel) {
-  return new Promise((resolve, reject) => {
-    if (!cardNodes || !cardNodes.length) {
-      resolve(null);
-      return;
-    }
-    const wrapper = buildExportWrapper(cardNodes, dateLabel);
-    document.body.appendChild(wrapper);
+export async function renderCardsToDataUrl(cardNodes, dateLabel) {
+  if (!cardNodes || !cardNodes.length) return null;
 
+  const { default: html2canvas } = await import('html2canvas');
+  const wrapper = buildExportWrapper(cardNodes, dateLabel);
+  document.body.appendChild(wrapper);
+
+  return new Promise((resolve, reject) => {
     // Small delay so the cloned DOM/fonts settle before rasterizing.
     setTimeout(() => {
       html2canvas(wrapper, {
