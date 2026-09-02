@@ -6,25 +6,22 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 
 export default function Header() {
-  const { t, language, toggleLanguage } = useLanguage();
+  const { t } = useLanguage();
   const { user, loading, authTiming, logout } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);
   const showDebugTiming = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debug') === '1';
 
   return (
     <div className="top-bar">
-      <button className="btn btn-ghost btn-sm" onClick={toggleLanguage}>
-        {language === 'ar' ? t.languageEnglish : t.languageArabic}
-      </button>
-
+      {/* Grid columns are 1fr auto 1fr (see CSS) — the logo sits in the auto
+          middle column, flanked by two equal 1fr columns, so it stays
+          mathematically centered regardless of screen size or how wide the
+          auth box gets. The language toggle moved to the footer so nothing
+          needs to occupy the left column at all. */}
       <Link to="/" className="top-bar__logo">
         <img src="/logo.svg" alt="ReCalc Logo" />
       </Link>
 
-      {/* auth-box-row always claims a full row on small screens (see CSS) so
-          the box itself never jumps between "fits next to the logo" and
-          "wraps to its own line" as its content width changes between the
-          compact spinner and the wider welcome+buttons. */}
       <div className="auth-box-row">
         <div className="auth-box">
           {loading ? (
