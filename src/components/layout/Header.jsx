@@ -7,7 +7,7 @@ import { useLanguage } from '../../context/LanguageContext.jsx';
 
 export default function Header() {
   const { t, language, toggleLanguage } = useLanguage();
-  const { user, logout } = useAuth();
+  const { user, loading, logout } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);
 
   return (
@@ -21,7 +21,7 @@ export default function Header() {
       </Link>
 
       <div className="top-bar__actions">
-        {user ? (
+        {loading ? null : user ? (
           <>
             <span style={{ fontSize: 13, fontWeight: 700 }}>
               {t.authWelcome.replace('{name}', user.displayName || user.email || t.guestLabel)}
