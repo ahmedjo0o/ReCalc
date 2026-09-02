@@ -20,8 +20,10 @@ export default function Header() {
         <img src="/logo.svg" alt="ReCalc Logo" />
       </Link>
 
-      <div className="top-bar__actions">
-        {loading ? null : user ? (
+      <div className="auth-box">
+        {loading ? (
+          <span className="auth-box__spinner" aria-label="Checking sign-in status" />
+        ) : user ? (
           <>
             <span style={{ fontSize: 13, fontWeight: 700 }}>
               {t.authWelcome.replace('{name}', user.displayName || user.email || t.guestLabel)}
@@ -32,9 +34,14 @@ export default function Header() {
             <Button variant="ghost" size="sm" onClick={logout}>{t.authLogout}</Button>
           </>
         ) : (
-          <Button variant="primary" size="sm" onClick={() => setAuthOpen(true)}>
-            {t.authSignIn}
-          </Button>
+          <>
+            <span style={{ fontSize: 13, fontWeight: 700 }}>
+              {t.authWelcome.replace('{name}', t.guestLabel)}
+            </span>
+            <Button variant="primary" size="sm" onClick={() => setAuthOpen(true)}>
+              {t.authSignIn}
+            </Button>
+          </>
         )}
       </div>
 
