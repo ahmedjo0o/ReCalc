@@ -30,11 +30,32 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
-      setUser(u);
-      setLoading(false);
+    let mounted = true;
+
+    // onAuthStateChanged's *first* callback isn't reliably the final word on
+    // a slow/cold-start restore (e.g. iOS Safari after a full Safari
+    // relaunch) — Firebase can call it once early (with no user yet, while
+    // it's still checking persisted storage) and again later once the real
+    // session is restored. Treating that first call as authoritative was
+    // exactly why the header used to flash "Sign in" for several seconds
+    // before correcting itself, looking like a real logout when it wasn't
+    // one. authStateReady() is the SDK's actual "the initial check is done"
+    // signal — wait for that before turning the spinner off.
+    auth.authStateReady().then(() => {
+      if (mounted) {
+        setUser(auth.currentUser);
+        setLoading(false);
+      }
     });
-    return unsubscribe;
+
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      if (mounted) setUser(u);
+    });
+
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
   }, []);
 
   // Picks up the result once the browser comes back from a signInWithRedirect
