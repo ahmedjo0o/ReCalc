@@ -1,5 +1,4 @@
 import { initializeApp } from 'firebase/app';
-import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getFunctions } from 'firebase/functions';
@@ -21,7 +20,15 @@ const firebaseConfig = {
   measurementId: 'G-Z8RYVFS1RR',
 };
 
-const APP_CHECK_SITE_KEY = '6Lc8wJktAAAAAL64DgF_eykDaMzWxbK9JsHwOZAo';
+// Kept for reference in case App Check enforcement is ever turned on
+// server-side (see enforceAppCheck in recalc-backend/functions/index.js —
+// currently false on both functions, so App Check provides zero benefit
+// right now). Deliberately NOT activated: its reCAPTCHA v3 script is a
+// real cross-origin, iframe-based verification system, and it's the prime
+// suspect for a ~30s page-load hang reported on Safari — likely Safari's
+// tracking prevention making its verification slow/retry-prone. Not worth
+// that cost for a check that isn't even being enforced.
+// const APP_CHECK_SITE_KEY = '6Lc8wJktAAAAAL64DgF_eykDaMzWxbK9JsHwOZAo';
 
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
@@ -37,17 +44,3 @@ export const functions = getFunctions(app);
 setPersistence(auth, browserLocalPersistence).catch((err) => {
   console.warn('Could not set auth persistence:', err);
 });
-
-// See the matching comment in the legacy ReCalc-frontend/firebase.js: enforcement
-// is currently OFF on the Cloud Functions side (enforceAppCheck: false), so this
-// activation is inert until that's flipped on once App Check metrics look clean.
-if (APP_CHECK_SITE_KEY) {
-  try {
-    initializeAppCheck(app, {
-      provider: new ReCaptchaV3Provider(APP_CHECK_SITE_KEY),
-      isTokenAutoRefreshEnabled: true,
-    });
-  } catch (err) {
-    console.warn('App Check activation failed:', err);
-  }
-}
