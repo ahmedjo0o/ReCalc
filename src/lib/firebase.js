@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
-import { getAuth } from 'firebase/auth';
+import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getFunctions } from 'firebase/functions';
 
@@ -27,6 +27,16 @@ export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const functions = getFunctions(app);
+
+// Without this, the SDK auto-picks a persistence mechanism (preferring
+// IndexedDB) and can silently fall back to a weaker, tab-scoped one on
+// Safari when IndexedDB is restricted — the session then doesn't survive
+// closing the browser even though nothing asked for that. Forcing
+// browserLocalPersistence (localStorage) makes "stay signed in until I log
+// out" the explicit, guaranteed behavior rather than incidental.
+setPersistence(auth, browserLocalPersistence).catch((err) => {
+  console.warn('Could not set auth persistence:', err);
+});
 
 // See the matching comment in the legacy ReCalc-frontend/firebase.js: enforcement
 // is currently OFF on the Cloud Functions side (enforceAppCheck: false), so this
