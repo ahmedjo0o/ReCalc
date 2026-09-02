@@ -1,5 +1,11 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import {
+  initializeAuth,
+  browserLocalPersistence,
+  browserSessionPersistence,
+  inMemoryPersistence,
+  browserPopupRedirectResolver,
+} from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getFunctions } from 'firebase/functions';
 
@@ -31,16 +37,26 @@ const firebaseConfig = {
 // const APP_CHECK_SITE_KEY = '6Lc8wJktAAAAAL64DgF_eykDaMzWxbK9JsHwOZAo';
 
 export const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+
+// Confirmed via on-device timing (see AuthContext.jsx's ?debug=1 overlay):
+// on iOS Safari specifically — never Chrome-iOS, which runs the *same*
+// WebKit engine but without Safari's own Intelligent Tracking Prevention —
+// a fresh app launch's auth check took 9.5–14.4s, vs 100–300ms on a plain
+// refresh. Since Safari's own app is the one enforcing ITP (Chrome-iOS,
+// running as its own sandboxed app, doesn't inherit it), and ITP's extra
+// verification work is known to weigh on IndexedDB specifically, this
+// explicitly restricts persistence to localStorage/sessionStorage/memory —
+// skipping Firebase's default preference for IndexedDB entirely — using
+// initializeAuth (sets it up this way from the start) rather than getAuth +
+// setPersistence (which would instead *migrate* an existing session
+// between backends, itself a real async storage operation).
+export const auth = initializeAuth(app, {
+  persistence: [browserLocalPersistence, browserSessionPersistence, inMemoryPersistence],
+  // initializeAuth (unlike getAuth) doesn't include this by default — without
+  // it, signInWithPopup/signInWithRedirect/getRedirectResult all throw
+  // auth/argument-error.
+  popupRedirectResolver: browserPopupRedirectResolver,
+});
+
 export const db = getFirestore(app);
 export const functions = getFunctions(app);
-
-// Without this, the SDK auto-picks a persistence mechanism (preferring
-// IndexedDB) and can silently fall back to a weaker, tab-scoped one on
-// Safari when IndexedDB is restricted — the session then doesn't survive
-// closing the browser even though nothing asked for that. Forcing
-// browserLocalPersistence (localStorage) makes "stay signed in until I log
-// out" the explicit, guaranteed behavior rather than incidental.
-setPersistence(auth, browserLocalPersistence).catch((err) => {
-  console.warn('Could not set auth persistence:', err);
-});
