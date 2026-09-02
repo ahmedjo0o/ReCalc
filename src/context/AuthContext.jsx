@@ -28,9 +28,15 @@ const POPUP_FALLBACK_CODES = ['auth/popup-blocked', 'auth/popup-closed-by-user',
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authTiming, setAuthTiming] = useState(null);
 
   useEffect(() => {
     let mounted = true;
+    // See index.html — how long the browser took to get our JS running at
+    // all, vs how long Firebase itself then took to confirm the session.
+    // Temporary diagnostic, surfaced only via ?debug=1 in Header.jsx.
+    const effectStart = performance.now();
+    const navStart = window.__RECALC_NAV_START__ ?? effectStart;
 
     // onAuthStateChanged's *first* callback isn't reliably the final word on
     // a slow/cold-start restore (e.g. iOS Safari after a full Safari
@@ -43,6 +49,13 @@ export function AuthProvider({ children }) {
     // signal — wait for that before turning the spinner off.
     auth.authStateReady().then(() => {
       if (mounted) {
+        const readyAt = performance.now();
+        const timing = {
+          bundleMs: Math.round(effectStart - navStart),
+          authMs: Math.round(readyAt - effectStart),
+        };
+        setAuthTiming(timing);
+        console.log('[reCalc timing] bundle/parse:', timing.bundleMs, 'ms — firebase auth check:', timing.authMs, 'ms');
         setUser(auth.currentUser);
         setLoading(false);
       }
@@ -145,6 +158,7 @@ export function AuthProvider({ children }) {
   const value = {
     user,
     loading,
+    authTiming,
     signUp,
     signIn,
     signInWithGoogle,
