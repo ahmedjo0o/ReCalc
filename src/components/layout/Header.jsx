@@ -7,8 +7,9 @@ import { useLanguage } from '../../context/LanguageContext.jsx';
 
 export default function Header() {
   const { t, language, toggleLanguage } = useLanguage();
-  const { user, loading, logout } = useAuth();
+  const { user, loading, authTiming, logout } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);
+  const showDebugTiming = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debug') === '1';
 
   return (
     <div className="top-bar">
@@ -44,6 +45,25 @@ export default function Header() {
           </>
         )}
       </div>
+
+      {showDebugTiming && authTiming && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 8,
+            left: 8,
+            fontSize: 11,
+            fontFamily: 'monospace',
+            background: 'rgba(0,0,0,0.75)',
+            color: '#fff',
+            padding: '6px 10px',
+            borderRadius: 8,
+            zIndex: 999,
+          }}
+        >
+          load: {authTiming.bundleMs}ms · auth check: {authTiming.authMs}ms
+        </div>
+      )}
 
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
     </div>
