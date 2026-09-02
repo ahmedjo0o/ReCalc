@@ -21,7 +21,7 @@ function PlainNameField({ label, name, onChange }) {
 
 export default function NamesStep({ numPeople, names, onNumPeopleChange, onNamesChange, onBack, onNext }) {
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [error, showError] = useFieldError();
   const { favorites, toggle } = useFavorites(user?.uid);
 
@@ -77,7 +77,12 @@ export default function NamesStep({ numPeople, names, onNumPeopleChange, onNames
       {names.length > 0 && (
         <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
           {names.map((name, i) => {
-            if (!user) {
+            // While auth is still resolving (e.g. right after a cold start),
+            // default to the plain field rather than assuming guest — it's
+            // always correct and fully usable either way, and upgrades to
+            // the favorites-enabled field the moment we know for sure,
+            // instead of ever showing a signed-in user the wrong one.
+            if (loading || !user) {
               return (
                 <PlainNameField key={i} label={`${t.nameLabel} ${i + 1}`} name={name} onChange={(value) => updateName(i, value)} />
               );
