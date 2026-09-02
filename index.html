@@ -3,6 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+
+    <!-- Start the DNS+TLS handshake to Firebase's auth/token servers right
+         away, in parallel with downloading our own JS, instead of only
+         starting once our code has loaded and actually asks for them. On a
+         high-latency mobile connection this round-trip setup cost (not
+         token staleness) is the likely reason every page load pays the same
+         delay before auth state is known. -->
+    <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin />
+    <link rel="preconnect" href="https://securetoken.googleapis.com" crossorigin />
+    <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com" />
+    <link rel="dns-prefetch" href="https://securetoken.googleapis.com" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>reCalc</title>
 
@@ -21,6 +32,11 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Marks "HTML has arrived and started parsing" as early as possible, so
+         we can later tell how much of a slow load is "downloading/parsing
+         our JS" vs "Firebase itself checking the session" — temporary,
+         visible via ?debug=1 in Header.jsx, not shown to normal users. -->
+    <script>window.__RECALC_NAV_START__ = performance.now();</script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
