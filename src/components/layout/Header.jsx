@@ -21,29 +21,35 @@ export default function Header() {
         <img src="/logo.svg" alt="ReCalc Logo" />
       </Link>
 
-      <div className="auth-box">
-        {loading ? (
-          <span className="auth-box__spinner" aria-label="Checking sign-in status" />
-        ) : user ? (
-          <>
-            <span style={{ fontSize: 13, fontWeight: 700 }}>
-              {t.authWelcome.replace('{name}', user.displayName || user.email || t.guestLabel)}
-            </span>
-            <Link to="/manage">
-              <Button variant="secondary" size="sm">{t.authManage}</Button>
-            </Link>
-            <Button variant="ghost" size="sm" onClick={logout}>{t.authLogout}</Button>
-          </>
-        ) : (
-          <>
-            <span style={{ fontSize: 13, fontWeight: 700 }}>
-              {t.authWelcome.replace('{name}', t.guestLabel)}
-            </span>
-            <Button variant="primary" size="sm" onClick={() => setAuthOpen(true)}>
-              {t.authSignIn}
-            </Button>
-          </>
-        )}
+      {/* auth-box-row always claims a full row on small screens (see CSS) so
+          the box itself never jumps between "fits next to the logo" and
+          "wraps to its own line" as its content width changes between the
+          compact spinner and the wider welcome+buttons. */}
+      <div className="auth-box-row">
+        <div className="auth-box">
+          {loading ? (
+            <span className="auth-box__spinner" aria-label="Checking sign-in status" />
+          ) : user ? (
+            <>
+              <span style={{ fontSize: 13, fontWeight: 700 }}>
+                {t.authWelcome.replace('{name}', user.displayName || user.email || t.guestLabel)}
+              </span>
+              <Link to="/manage">
+                <Button variant="secondary" size="sm">{t.authManage}</Button>
+              </Link>
+              <Button variant="ghost" size="sm" onClick={logout}>{t.authLogout}</Button>
+            </>
+          ) : (
+            <>
+              <span style={{ fontSize: 13, fontWeight: 700 }}>
+                {t.authWelcome.replace('{name}', t.guestLabel)}
+              </span>
+              <Button variant="primary" size="sm" onClick={() => setAuthOpen(true)}>
+                {t.authSignIn}
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       {showDebugTiming && authTiming && (
