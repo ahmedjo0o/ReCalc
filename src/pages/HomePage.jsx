@@ -4,6 +4,7 @@ import NamesStep from '../components/calculator/NamesStep.jsx';
 import ManualEntryStep from '../components/calculator/ManualEntryStep.jsx';
 import AssignStep from '../components/calculator/AssignStep.jsx';
 import ResultStep from '../components/calculator/ResultStep.jsx';
+import InstallAppButton from '../components/ui/InstallAppButton.jsx';
 import { useCalculatorFlow } from '../hooks/useCalculatorFlow.js';
 
 export default function HomePage() {
@@ -68,6 +69,8 @@ export default function HomePage() {
           onStartAgain={startAgain}
         />
       )}
+
+      {step === 'method' && <InstallAppButton />}
     </main>
   );
 }
