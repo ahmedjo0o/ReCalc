@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="manifest" href="/manifest.json" />
 
     <!-- Start the DNS+TLS handshake to Firebase's auth/token servers right
          away, in parallel with downloading our own JS, instead of only
@@ -37,6 +38,13 @@
          our JS" vs "Firebase itself checking the session" — temporary,
          visible via ?debug=1 in Header.jsx, not shown to normal users. -->
     <script>window.__RECALC_NAV_START__ = performance.now();</script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
