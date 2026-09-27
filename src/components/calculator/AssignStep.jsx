@@ -141,11 +141,12 @@ export default function AssignStep({ names, scannedReceipt, onBack, onCalculate,
 
       <div className="items-list" style={{ marginTop: 12 }}>
         {items.map((it, idx) => (
-          <div key={idx} className="item-row-container" style={{ marginBottom: '12px' }}>
-            <div className="item-row">
-              <span className="item-row__index">{idx + 1}</span>
-              <TextInput placeholder={t.itemNamePlaceholder} value={it.label} onChange={(e) => updateItem(idx, 'label', e.target.value)} />
-              <TextInput type="number" step="0.01" placeholder={t.itemPricePlaceholder} value={it.price} onChange={(e) => updateItem(idx, 'price', e.target.value)} />
+          <div key={idx} className="item-row" style={{ marginBottom: '12px' }}>
+            <span className="item-row__index">{idx + 1}</span>
+            <TextInput placeholder={t.itemNamePlaceholder} value={it.label} onChange={(e) => updateItem(idx, 'label', e.target.value)} />
+            <TextInput type="number" step="0.01" placeholder={t.itemPricePlaceholder} value={it.price} onChange={(e) => updateItem(idx, 'price', e.target.value)} />
+            
+            <div style={{ display: 'flex', flex: '1 1 150px', flexDirection: 'column', gap: '8px' }}>
               <Select value={it.assignedTo} onChange={(e) => updateItem(idx, 'assignedTo', e.target.value)}>
                 <option value="">{t.choosePersonPlaceholder}</option>
                 <option value="(All)">(All)</option>
@@ -154,22 +155,24 @@ export default function AssignStep({ names, scannedReceipt, onBack, onCalculate,
                   <option key={n} value={n}>{n}</option>
                 ))}
               </Select>
-              <button type="button" className="btn btn-secondary btn-sm item-row__remove" onClick={() => removeItem(idx)}>{t.removeButton}</button>
+
+              {it.assignedTo === '(Custom)' && (
+                <div className="custom-names-list" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {names.map((n) => (
+                    <label key={n} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.9rem' }}>
+                      <input
+                        type="checkbox"
+                        checked={it.customNames.includes(n)}
+                        onChange={() => toggleCustomName(idx, n)}
+                      />
+                      {n}
+                    </label>
+                  ))}
+                </div>
+              )}
             </div>
-            {it.assignedTo === '(Custom)' && (
-              <div className="custom-names-list" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px', paddingLeft: '24px' }}>
-                {names.map((n) => (
-                  <label key={n} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.9rem' }}>
-                    <input
-                      type="checkbox"
-                      checked={it.customNames.includes(n)}
-                      onChange={() => toggleCustomName(idx, n)}
-                    />
-                    {n}
-                  </label>
-                ))}
-              </div>
-            )}
+
+            <button type="button" className="btn btn-secondary btn-sm item-row__remove" onClick={() => removeItem(idx)}>{t.removeButton}</button>
           </div>
         ))}
       </div>
