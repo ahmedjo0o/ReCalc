@@ -146,8 +146,8 @@ export default function AssignStep({ names, scannedReceipt, onBack, onCalculate,
             <TextInput placeholder={t.itemNamePlaceholder} value={it.label} onChange={(e) => updateItem(idx, 'label', e.target.value)} />
             <TextInput type="number" step="0.01" placeholder={t.itemPricePlaceholder} value={it.price} onChange={(e) => updateItem(idx, 'price', e.target.value)} />
             
-            <div style={{ display: 'flex', flex: '1 1 150px', flexDirection: 'column', gap: '8px' }}>
-              <Select value={it.assignedTo} onChange={(e) => updateItem(idx, 'assignedTo', e.target.value)}>
+            <div style={{ display: 'flex', flex: '1 1 150px', flexDirection: 'column', gap: '8px', minWidth: 0 }}>
+              <Select style={{ flex: 'none', width: '100%' }} value={it.assignedTo} onChange={(e) => updateItem(idx, 'assignedTo', e.target.value)}>
                 <option value="">{t.choosePersonPlaceholder}</option>
                 <option value="(All)">(All)</option>
                 <option value="(Custom)">(Custom)</option>
