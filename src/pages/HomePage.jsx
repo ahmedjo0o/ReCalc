@@ -51,8 +51,11 @@ export default function HomePage() {
         />
       )}
 
-      {step === 'assign' && (
+      {/* Stays mounted (hidden) behind the results so "Back" returns to the
+          same assignments instead of a blank step. */}
+      {(step === 'assign' || (step === 'result' && flow === 'scan')) && (
         <AssignStep
+          hidden={step !== 'assign'}
           names={names}
           scannedReceipt={scannedReceipt}
           onBack={() => goToStep('names')}
