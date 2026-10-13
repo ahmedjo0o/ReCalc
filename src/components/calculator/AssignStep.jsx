@@ -5,8 +5,16 @@ import { useLanguage } from '../../context/LanguageContext.jsx';
 import { useFieldError } from '../../hooks/useFieldError.js';
 import { validateBillTotals } from '../../lib/validation.js';
 
-export default function AssignStep({ names, scannedReceipt, onBack, onCalculate, calculating, serverError }) {
+// assignedTo holds one of these, or a person's index in `names` as a string.
+// People are tracked by index rather than by name so two people sharing a
+// name (or someone literally named "(All)") still get their own share.
+const ASSIGN_ALL = 'all';
+const ASSIGN_CUSTOM = 'custom';
+
+export default function AssignStep({ names, scannedReceipt, onBack, onCalculate, calculating, serverError, hidden = false }) {
   const { t } = useLanguage();
+  const allLabel = t.assignAllOption || '(All)';
+  const customLabel = t.assignCustomOption || '(Custom)';
   const receipt = scannedReceipt || { totalOrder: '', subTotal: '', discount: '', items: [] };
 
   const [totalOrder, setTotalOrder] = useState(String(receipt.totalOrder ?? ''));
@@ -18,7 +26,7 @@ export default function AssignStep({ names, scannedReceipt, onBack, onCalculate,
       label: it.label || '',
       price: it.price ?? '',
       assignedTo: '',
-      customNames: [],
+      customIdx: [],
     })),
   );
   const [fieldErrors, setFieldErrors] = useState({});
@@ -28,26 +36,26 @@ export default function AssignStep({ names, scannedReceipt, onBack, onCalculate,
     setItems((prev) => {
       const next = [...prev];
       next[idx] = { ...next[idx], [key]: value };
-      if (key === 'assignedTo' && value === '(All)') {
-        next[idx].customNames = [];
+      if (key === 'assignedTo' && value === ASSIGN_ALL) {
+        next[idx].customIdx = [];
       }
       return next;
     });
   }
 
-  function toggleCustomName(idx, name) {
+  function toggleCustomPerson(idx, personIdx) {
     setItems((prev) => {
       const next = [...prev];
       const item = { ...next[idx] };
-      const newCustomNames = item.customNames.includes(name)
-        ? item.customNames.filter((n) => n !== name)
-        : [...item.customNames, name];
+      const newCustomIdx = item.customIdx.includes(personIdx)
+        ? item.customIdx.filter((i) => i !== personIdx)
+        : [...item.customIdx, personIdx];
 
-      if (newCustomNames.length === names.length && names.length > 0) {
-        item.assignedTo = '(All)';
-        item.customNames = [];
+      if (newCustomIdx.length === names.length && names.length > 0) {
+        item.assignedTo = ASSIGN_ALL;
+        item.customIdx = [];
       } else {
-        item.customNames = newCustomNames;
+        item.customIdx = newCustomIdx;
       }
       next[idx] = item;
       return next;
@@ -55,7 +63,7 @@ export default function AssignStep({ names, scannedReceipt, onBack, onCalculate,
   }
 
   function addItem() {
-    setItems((prev) => [...prev, { label: '', price: '', assignedTo: '', customNames: [] }]);
+    setItems((prev) => [...prev, { label: '', price: '', assignedTo: '', customIdx: [] }]);
   }
 
   function removeItem(idx) {
@@ -74,7 +82,7 @@ export default function AssignStep({ names, scannedReceipt, onBack, onCalculate,
       const price = parseFloat(it.price) || 0;
       if (price === 0) return false;
       if (!it.assignedTo) return true;
-      if (it.assignedTo === '(Custom)' && (!it.customNames || it.customNames.length === 0)) return true;
+      if (it.assignedTo === ASSIGN_CUSTOM && it.customIdx.length === 0) return true;
       return false;
     });
 
@@ -83,46 +91,42 @@ export default function AssignStep({ names, scannedReceipt, onBack, onCalculate,
       return;
     }
 
-    const byName = {};
-    names.forEach((n) => {
-      byName[n] = { name: n, items: [] };
-    });
+    const totals = names.map((n) => ({ name: n, items: [] }));
 
     items.forEach((it) => {
       const price = parseFloat(it.price) || 0;
       if (!it.assignedTo || price === 0) return;
 
-      let assignedNames = [];
-      if (it.assignedTo === '(All)') {
-        assignedNames = names;
-      } else if (it.assignedTo === '(Custom)') {
-        assignedNames = it.customNames || [];
-        if (assignedNames.length === 0) return;
+      let assignedIdx = [];
+      if (it.assignedTo === ASSIGN_ALL) {
+        assignedIdx = names.map((_, i) => i);
+      } else if (it.assignedTo === ASSIGN_CUSTOM) {
+        assignedIdx = it.customIdx;
       } else {
-        assignedNames = [it.assignedTo];
+        assignedIdx = [Number(it.assignedTo)];
+      }
+      assignedIdx = assignedIdx.filter((i) => totals[i]);
+      if (assignedIdx.length === 0) return;
+
+      let labelSuffix = '';
+      if (assignedIdx.length > 1) {
+        labelSuffix = ` ${it.assignedTo === ASSIGN_ALL ? allLabel : customLabel}`;
       }
 
-      const splitPrice = price / assignedNames.length;
-      assignedNames.forEach((n) => {
-        if (!byName[n]) byName[n] = { name: n, items: [] };
-
-        let labelSuffix = '';
-        if (assignedNames.length > 1) {
-          labelSuffix = it.assignedTo === '(All)' ? ' (All)' : ' (Custom)';
-        }
-
-        byName[n].items.push({
+      const splitPrice = price / assignedIdx.length;
+      assignedIdx.forEach((i) => {
+        totals[i].items.push({
           label: (it.label.trim() || t.noLabel || 'Item') + labelSuffix,
           price: splitPrice,
         });
       });
     });
 
-    onCalculate({ ...result.value, totals: names.map((n) => byName[n]) });
+    onCalculate({ ...result.value, totals });
   }
 
   return (
-    <div className="step">
+    <div className="step" style={hidden ? { display: 'none' } : undefined}>
       <h2 className="page-title" style={{ fontSize: '1.2rem' }}>{t.assignStepTitle}</h2>
       <p className="page-subtitle">{t.assignStepSubtitle}</p>
 
@@ -149,21 +153,21 @@ export default function AssignStep({ names, scannedReceipt, onBack, onCalculate,
             <div style={{ display: 'flex', flex: '1 1 150px', flexDirection: 'column', gap: '8px', minWidth: 0 }}>
               <Select style={{ flex: 'none', width: '100%' }} value={it.assignedTo} onChange={(e) => updateItem(idx, 'assignedTo', e.target.value)}>
                 <option value="">{t.choosePersonPlaceholder}</option>
-                <option value="(All)">(All)</option>
-                <option value="(Custom)">(Custom)</option>
-                {names.map((n) => (
-                  <option key={n} value={n}>{n}</option>
+                <option value={ASSIGN_ALL}>{allLabel}</option>
+                <option value={ASSIGN_CUSTOM}>{customLabel}</option>
+                {names.map((n, i) => (
+                  <option key={i} value={String(i)}>{n}</option>
                 ))}
               </Select>
 
-              {it.assignedTo === '(Custom)' && (
+              {it.assignedTo === ASSIGN_CUSTOM && (
                 <div className="custom-names-list" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {names.map((n) => (
-                    <label key={n} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.9rem' }}>
+                  {names.map((n, i) => (
+                    <label key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.9rem' }}>
                       <input
                         type="checkbox"
-                        checked={it.customNames.includes(n)}
-                        onChange={() => toggleCustomName(idx, n)}
+                        checked={it.customIdx.includes(i)}
+                        onChange={() => toggleCustomPerson(idx, i)}
                       />
                       {n}
                     </label>
