@@ -10,5 +10,5 @@ export function callCalculateBill(payload) {
 
 // Gemini-based receipt OCR. payload: { imageBase64, mimeType }
 export function callExtractReceipt(payload) {
-  return httpsCallable(functions, 'extractReceipt', { timeout: 60000 })(payload);
+  return httpsCallable(functions, 'extractReceipt', { timeout: 120000 })(payload);
 }
