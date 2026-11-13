@@ -30,3 +30,26 @@ export function mapServerErrorMessage(err, t) {
       return t.calculationFailedError || 'Something went wrong while calculating. Please try again.';
   }
 }
+
+// Maps a Firebase Auth error to a translated, user-facing string, so people
+// never see raw text like "Firebase: Error (auth/invalid-credential).".
+export function mapAuthErrorMessage(err, t) {
+  switch (err && err.code) {
+    case 'auth/invalid-credential':
+    case 'auth/wrong-password':
+    case 'auth/user-not-found':
+      return t.authInvalidCredentials;
+    case 'auth/email-already-in-use':
+      return t.authEmailInUse;
+    case 'auth/weak-password':
+      return t.authWeakPassword;
+    case 'auth/invalid-email':
+      return t.authInvalidEmail;
+    case 'auth/too-many-requests':
+      return t.authTooManyRequests;
+    case 'auth/network-request-failed':
+      return t.authNetworkError;
+    default:
+      return t.authGenericError;
+  }
+}

@@ -148,6 +148,21 @@ export const translations = {
     preparingImageMessage: 'Preparing image…',
     saveImageButton: 'Save Image',
     shareImageTitle: 'Your bill',
+
+    // --- Clearer errors and confirmations ---
+    imageTooLargeError: 'This photo is too large to upload. Please take it again or choose a smaller one.',
+    loadFailedError: 'Could not load your data. Check your connection and try again.',
+    nameSaved: 'Name saved.',
+    passwordChanged: 'Password updated.',
+    passwordResetSent: 'We sent a password reset link to your email.',
+    authFieldsRequired: 'Please enter your email and password.',
+    authInvalidCredentials: 'Incorrect email or password.',
+    authEmailInUse: 'An account with this email already exists. Try signing in instead.',
+    authWeakPassword: 'Password must be at least 6 characters.',
+    authInvalidEmail: 'Please enter a valid email address.',
+    authTooManyRequests: 'Too many attempts. Please wait a bit and try again.',
+    authNetworkError: 'Network problem. Check your connection and try again.',
+    authGenericError: 'Something went wrong. Please try again.',
   },
   ar: {
     pageTitle: 'reCalc - احسب فاتورتك مع أصدقائك',
@@ -292,6 +307,21 @@ export const translations = {
     preparingImageMessage: 'جارٍ تجهيز الصورة…',
     saveImageButton: 'حفظ الصورة',
     shareImageTitle: 'فاتورتك',
+
+    // --- رسائل أخطاء وتأكيدات أوضح ---
+    imageTooLargeError: 'حجم الصورة كبير جدًا. يرجى التقاطها مرة أخرى أو اختيار صورة أصغر.',
+    loadFailedError: 'تعذّر تحميل بياناتك. تحقق من اتصالك وحاول مرة أخرى.',
+    nameSaved: 'تم حفظ الاسم.',
+    passwordChanged: 'تم تحديث كلمة المرور.',
+    passwordResetSent: 'أرسلنا رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني.',
+    authFieldsRequired: 'يرجى إدخال البريد الإلكتروني وكلمة المرور.',
+    authInvalidCredentials: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
+    authEmailInUse: 'يوجد حساب بهذا البريد الإلكتروني بالفعل. جرّب تسجيل الدخول.',
+    authWeakPassword: 'يجب ألا تقل كلمة المرور عن 6 أحرف.',
+    authInvalidEmail: 'يرجى إدخال بريد إلكتروني صحيح.',
+    authTooManyRequests: 'محاولات كثيرة جدًا. يرجى الانتظار قليلاً ثم المحاولة مرة أخرى.',
+    authNetworkError: 'مشكلة في الاتصال. تحقق من اتصالك وحاول مرة أخرى.',
+    authGenericError: 'حدث خطأ. يرجى المحاولة مرة أخرى.',
   },
 };
 

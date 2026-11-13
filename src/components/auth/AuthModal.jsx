@@ -4,6 +4,7 @@ import Button from '../ui/Button.jsx';
 import { TextInput } from '../ui/Field.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useLanguage } from '../../context/LanguageContext.jsx';
+import { mapAuthErrorMessage } from '../../lib/errors.js';
 
 export default function AuthModal({ onClose, initialMode = 'signin' }) {
   const { t } = useLanguage();
@@ -17,7 +18,7 @@ export default function AuthModal({ onClose, initialMode = 'signin' }) {
   async function handleSubmit(e) {
     e.preventDefault();
     if (!email.trim() || !password.trim()) {
-      setError(t.nameError);
+      setError(t.authFieldsRequired);
       return;
     }
     setBusy(true);
@@ -30,7 +31,8 @@ export default function AuthModal({ onClose, initialMode = 'signin' }) {
       }
       onClose();
     } catch (err) {
-      setError(err.message || String(err));
+      console.warn('Sign-in failed:', err);
+      setError(mapAuthErrorMessage(err, t));
     } finally {
       setBusy(false);
     }
@@ -43,7 +45,8 @@ export default function AuthModal({ onClose, initialMode = 'signin' }) {
       await signInWithGoogle();
       onClose();
     } catch (err) {
-      setError(err.message || String(err));
+      console.warn('Google sign-in failed:', err);
+      setError(mapAuthErrorMessage(err, t));
     } finally {
       setBusy(false);
     }

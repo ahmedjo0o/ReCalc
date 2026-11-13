@@ -5,6 +5,7 @@ import { Field, TextInput, Select } from '../ui/Field.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 import { CURRENCIES } from '../../i18n/translations.js';
+import { mapAuthErrorMessage } from '../../lib/errors.js';
 import { getUserProfile, setUserCurrency, DEFAULT_CURRENCY } from '../../lib/firestoreService.js';
 
 // Only ever rendered when signed in — ManagePage gates the whole page on
@@ -30,8 +31,12 @@ export default function ProfileCard() {
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      const profile = await getUserProfile(user.uid);
-      if (!cancelled) setCurrency(profile?.currency || DEFAULT_CURRENCY);
+      try {
+        const profile = await getUserProfile(user.uid);
+        if (!cancelled) setCurrency(profile?.currency || DEFAULT_CURRENCY);
+      } catch (err) {
+        console.warn('Could not load profile:', err);
+      }
     }
     load();
     return () => {
@@ -43,16 +48,24 @@ export default function ProfileCard() {
     setMessage('');
     try {
       await updateDisplayName(displayName.trim());
-      setMessage(t.savedToFavorites);
+      setMessage(t.nameSaved);
     } catch (err) {
-      setMessage(err.message || String(err));
+      console.warn('Could not save name:', err);
+      setMessage(t.authGenericError);
     }
   }
 
   async function handleCurrencyChange(next) {
+    const previous = currency;
     setCurrency(next);
-    await setUserCurrency(user.uid, next);
-    setMessage(t.currencyUpdated);
+    try {
+      await setUserCurrency(user.uid, next);
+      setMessage(t.currencyUpdated);
+    } catch (err) {
+      console.warn('Could not save currency:', err);
+      setCurrency(previous);
+      setMessage(t.authGenericError);
+    }
   }
 
   async function handleChangePassword() {
@@ -66,9 +79,10 @@ export default function ProfileCard() {
       const res = await changePassword(currentPassword, newPassword);
       setCurrentPassword('');
       setNewPassword('');
-      setMessage(res.mode === 'reset-email-sent' ? t.currencyUpdated : t.savedToFavorites);
+      setMessage(res.mode === 'reset-email-sent' ? t.passwordResetSent : t.passwordChanged);
     } catch (err) {
-      setMessage(err.message || String(err));
+      console.warn('Could not change password:', err);
+      setMessage(mapAuthErrorMessage(err, t));
     } finally {
       setBusy(false);
     }

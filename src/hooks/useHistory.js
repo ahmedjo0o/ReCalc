@@ -7,6 +7,7 @@ import { getUserHistory, deleteHistoryItem } from '../lib/firestoreService.js';
 // never invoke them for a guest anyway.
 export function useHistory(uid, limitCount = 20) {
   const [items, setItems] = useState(uid ? null : []);
+  const [loadError, setLoadError] = useState(false);
 
   const reload = useCallback(async () => {
     if (!uid) {
@@ -20,7 +21,14 @@ export function useHistory(uid, limitCount = 20) {
 
   useEffect(() => {
     setItems(uid ? null : []);
-    reload();
+    setLoadError(false);
+    // Without this catch a failed load left the list null forever, i.e. a
+    // permanent "Loading…".
+    reload().catch((err) => {
+      console.error('Could not load items:', err);
+      setItems([]);
+      setLoadError(true);
+    });
   }, [uid, reload]);
 
   async function remove(item) {
@@ -35,5 +43,5 @@ export function useHistory(uid, limitCount = 20) {
     return reload();
   }
 
-  return { items, loading: uid ? items === null : false, reload, remove, clearAll };
+  return { items, loading: uid ? items === null : false, loadError, reload, remove, clearAll };
 }

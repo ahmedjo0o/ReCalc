@@ -26,8 +26,11 @@ export default function HomePage() {
     <main>
       {step === 'method' && <MethodChoiceStep onChoose={chooseMethod} />}
 
-      {step === 'scan' && (
-        <ScanStep onBack={() => goToStep('method')} onContinue={scanContinue} />
+      {/* Stays mounted (hidden) for the rest of the scan flow so "Back" from
+          the names step returns to the photo and extracted items instead of
+          a blank step that forces a rescan. */}
+      {flow === 'scan' && step !== 'method' && (
+        <ScanStep hidden={step !== 'scan'} onBack={() => goToStep('method')} onContinue={scanContinue} />
       )}
 
       {step === 'names' && (

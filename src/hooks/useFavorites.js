@@ -8,6 +8,7 @@ import { getFavorites, addFavorite, updateFavorite, deleteFavorite, reorderFavor
 // names-step autocomplete can use it too without branching on auth itself.
 export function useFavorites(uid) {
   const [favorites, setFavorites] = useState(uid ? null : []);
+  const [loadError, setLoadError] = useState(false);
 
   const reload = useCallback(async () => {
     if (!uid) {
@@ -21,7 +22,14 @@ export function useFavorites(uid) {
 
   useEffect(() => {
     setFavorites(uid ? null : []);
-    reload();
+    setLoadError(false);
+    // Without this catch a failed load left the list null forever, i.e. a
+    // permanent "Loading…".
+    reload().catch((err) => {
+      console.error('Could not load favorites:', err);
+      setFavorites([]);
+      setLoadError(true);
+    });
   }, [uid, reload]);
 
   async function add(name) {
@@ -72,5 +80,5 @@ export function useFavorites(uid) {
     }
   }
 
-  return { favorites, loading: uid ? favorites === null : false, reload, add, update, remove, toggle, move };
+  return { favorites, loading: uid ? favorites === null : false, loadError, reload, add, update, remove, toggle, move };
 }

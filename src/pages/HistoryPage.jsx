@@ -11,7 +11,7 @@ const ITEMS_PER_PAGE = 15;
 export default function HistoryPage() {
   const { t } = useLanguage();
   const { user, loading: authLoading } = useAuth();
-  const { items, loading, remove, clearAll } = useHistory(user?.uid, 1000);
+  const { items, loading, loadError, remove, clearAll } = useHistory(user?.uid, 1000);
   const [page, setPage] = useState(1);
 
   async function handleDeleteAll() {
@@ -44,7 +44,8 @@ export default function HistoryPage() {
       </div>
 
       {loading && <p style={{ textAlign: 'center' }}>{t.loadingText}</p>}
-      {!loading && items.length === 0 && <p style={{ textAlign: 'center' }}>{t.noHistoryYet}</p>}
+      {!loading && loadError && <p className="error-text" style={{ textAlign: 'center' }}>{t.loadFailedError}</p>}
+      {!loading && !loadError && items.length === 0 && <p style={{ textAlign: 'center' }}>{t.noHistoryYet}</p>}
 
       <div className="cards-grid">
         {pageItems.map((item) => (

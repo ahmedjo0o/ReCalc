@@ -9,12 +9,13 @@ import { useHistory } from '../../hooks/useHistory.js';
 export default function HistoryPreviewCard() {
   const { t } = useLanguage();
   const { user } = useAuth();
-  const { items, loading, remove } = useHistory(user?.uid, 3);
+  const { items, loading, loadError, remove } = useHistory(user?.uid, 3);
 
   return (
     <Card header={t.recentHistoryTitle}>
       {loading && <p>{t.loadingText}</p>}
-      {!loading && items.length === 0 && <p>{t.noHistoryYet}</p>}
+      {!loading && loadError && <p className="error-text">{t.loadFailedError}</p>}
+      {!loading && !loadError && items.length === 0 && <p>{t.noHistoryYet}</p>}
       {!loading && items.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {items.map((item) => (

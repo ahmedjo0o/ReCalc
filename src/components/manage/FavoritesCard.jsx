@@ -15,7 +15,7 @@ function FavoriteEditInput({ value, onChange }) {
 export default function FavoritesCard() {
   const { t } = useLanguage();
   const { user } = useAuth();
-  const { favorites, loading, add, update, remove, move } = useFavorites(user?.uid);
+  const { favorites, loading, loadError, add, update, remove, move } = useFavorites(user?.uid);
   const [newName, setNewName] = useState('');
   const [edits, setEdits] = useState({});
   const [error, setError] = useState('');
@@ -61,7 +61,8 @@ export default function FavoritesCard() {
       </div>
 
       {loading && <p>{t.loadingText}</p>}
-      {!loading && favorites.length === 0 && <p>{t.noFavoritesYet}</p>}
+      {!loading && loadError && <p className="error-text">{t.loadFailedError}</p>}
+      {!loading && !loadError && favorites.length === 0 && <p>{t.noFavoritesYet}</p>}
       {!loading && favorites.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {favorites.map((fav, i) => (

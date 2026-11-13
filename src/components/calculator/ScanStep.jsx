@@ -9,14 +9,18 @@ import { downscaleImageDataUrl } from '../../lib/imageUtils.js';
 import { validateBillTotals } from '../../lib/validation.js';
 import { getServerErrorCode } from '../../lib/errors.js';
 
-export default function ScanStep({ onBack, onContinue }) {
+const MAX_ORIGINAL_BYTES = 5.5 * 1024 * 1024;
+
+export default function ScanStep({ onBack, onContinue, hidden = false }) {
   const { t } = useLanguage();
   const cameraInputRef = useRef(null);
   const uploadInputRef = useRef(null);
 
   const [imageDataUrl, setImageDataUrl] = useState(null);
   const [extracting, setExtracting] = useState(false);
-  const [scanError, showScanError] = useFieldError();
+  // Stays on screen until the next action (new photo, retake, another
+  // extract) instead of vanishing after a few seconds.
+  const [scanError, showScanError] = useState('');
 
   const [showFields, setShowFields] = useState(false);
   const [totalOrder, setTotalOrder] = useState('');
@@ -29,11 +33,19 @@ export default function ScanStep({ onBack, onContinue }) {
   async function handleFileSelected(e) {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
+    showScanError('');
     const reader = new FileReader();
     reader.onload = async (ev) => {
       try {
         setImageDataUrl(await downscaleImageDataUrl(ev.target.result));
-      } catch {
+      } catch (err) {
+        console.warn('Could not shrink the photo:', err);
+        // The original is only usable if it fits under the server's size
+        // limit (8,000,000 base64 chars, roughly 6 MB of image).
+        if (file.size > MAX_ORIGINAL_BYTES) {
+          showScanError(t.imageTooLargeError);
+          return;
+        }
         setImageDataUrl(ev.target.result);
       }
       setShowFields(false);
@@ -43,6 +55,7 @@ export default function ScanStep({ onBack, onContinue }) {
   }
 
   function retake() {
+    showScanError('');
     setImageDataUrl(null);
     setShowFields(false);
     if (cameraInputRef.current) cameraInputRef.current.value = '';
@@ -60,6 +73,7 @@ export default function ScanStep({ onBack, onContinue }) {
   async function extract() {
     if (!imageDataUrl) return;
     setExtracting(true);
+    showScanError('');
     try {
       const commaIdx = imageDataUrl.indexOf(',');
       const meta = imageDataUrl.slice(5, commaIdx);
@@ -69,7 +83,12 @@ export default function ScanStep({ onBack, onContinue }) {
       const parsed = response.data || {};
       populateFields(parsed);
     } catch (err) {
-      const msg = getServerErrorCode(err) === 'rateLimitExceeded' ? t.rateLimitError : t.ocrFailedError;
+      console.warn('Receipt extraction failed:', err);
+      const code = getServerErrorCode(err);
+      const msg =
+        code === 'rateLimitExceeded' ? t.rateLimitError
+        : code === 'imageTooLarge' ? t.imageTooLargeError
+        : t.ocrFailedError;
       showScanError(msg);
       populateFields({ totalOrder: '', subTotal: '', discount: '', items: [] });
     } finally {
@@ -127,7 +146,7 @@ export default function ScanStep({ onBack, onContinue }) {
   }
 
   return (
-    <div className="step">
+    <div className="step" style={hidden ? { display: 'none' } : undefined}>
       <h2 className="page-title" style={{ fontSize: '1.2rem' }}>{t.scanStepTitle}</h2>
 
       <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={handleFileSelected} />
