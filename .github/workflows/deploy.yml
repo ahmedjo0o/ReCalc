@@ -33,6 +33,10 @@ jobs:
       # 404 page lets React Router take over and render the right screen.
       - run: cp dist/index.html dist/404.html
 
+      # Give the How-to-use page a real file so it loads with a normal 200
+      # status (search engines ignore pages that only exist via the 404 trick).
+      - run: mkdir -p dist/how-to-use && cp dist/index.html dist/how-to-use/index.html
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

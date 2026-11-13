@@ -554,3 +554,147 @@
   font-size: 0.8rem;
   color: #234;
 }
+
+/* ---------- How to use page ---------- */
+
+.howto p {
+  line-height: 1.7;
+  margin: 0 0 10px;
+}
+
+.howto-intro {
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto 24px !important;
+}
+
+.howto-h2 {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--color-accent);
+  margin: 0 0 8px;
+}
+
+.howto-start {
+  display: grid;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.howto-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 6px;
+  margin: 0 0 22px;
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 14px;
+}
+
+.howto-tab {
+  flex: 1;
+  font-family: var(--font-family);
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 10px 8px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-accent);
+  cursor: pointer;
+}
+
+.howto-tab.is-active {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.howto-steps {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 16px;
+}
+
+.howto-step {
+  display: grid;
+  gap: 16px;
+  background: var(--color-surface-solid);
+  border-radius: 16px;
+  box-shadow: 0 8px 22px rgba(0, 20, 50, 0.1);
+  padding: 18px;
+}
+
+.howto-step__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.howto-step__num {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: #fff;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.howto-step__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.howto-tip {
+  background: #eef6f4;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+}
+
+.howto-shot {
+  width: 100%;
+  max-width: 300px;
+  max-height: 440px;
+  overflow-y: auto;
+  margin: 0 auto;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: linear-gradient(135deg, #d8ebe7, #cbdcea);
+  padding: 10px;
+}
+
+.howto-shot--short {
+  max-height: none;
+}
+
+.howto-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.howto-notes {
+  margin-top: 24px;
+}
+
+.howto-notes ul {
+  margin: 0;
+  padding-inline-start: 20px;
+  line-height: 1.8;
+}
+
+@media (min-width: 768px) {
+  .howto-start,
+  .howto-step {
+    grid-template-columns: 1fr 300px;
+    align-items: start;
+  }
+}
