@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 
 export default function Footer() {
@@ -9,7 +8,6 @@ export default function Footer() {
         {language === 'ar' ? t.languageEnglish : t.languageArabic}
       </button>
       <div className="site-footer__links">
-        <Link to="/how-to-use">{t.howToButton}</Link>
         <a href="/about.html">{t.footerAbout}</a>
         <a href="/privacy.html">{t.footerPrivacy}</a>
         <a href="/contact.html">{t.footerContact}</a>

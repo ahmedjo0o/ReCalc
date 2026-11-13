@@ -698,3 +698,25 @@
     align-items: start;
   }
 }
+
+/* Homepage link to the How to use page: a drawn "?" badge instead of an
+   emoji, so it sits on the text's centre line on every device. */
+.howto-link {
+  text-decoration: none;
+  gap: 6px;
+}
+
+.howto-link__icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
