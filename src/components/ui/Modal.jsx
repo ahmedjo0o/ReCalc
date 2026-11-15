@@ -1,7 +1,11 @@
+import { createPortal } from 'react-dom';
 import Card from './Card.jsx';
 
 export default function Modal({ title, onClose, className = '', children }) {
-  return (
+  // Rendered straight into <body>: the page's glass panel uses
+  // backdrop-filter, which would otherwise trap this "fixed" overlay inside
+  // the panel instead of covering the screen.
+  return createPortal(
     <div
       className="modal-overlay"
       onMouseDown={(e) => {
@@ -17,6 +21,7 @@ export default function Modal({ title, onClose, className = '', children }) {
         </div>
         {children}
       </Card>
-    </div>
+    </div>,
+    document.body,
   );
 }

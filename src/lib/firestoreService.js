@@ -137,3 +137,26 @@ export async function setUserCurrency(uid, currency) {
   await setDoc(doc(db, 'users', uid), { currency }, { merge: true });
   return { action: 'updated', currency };
 }
+
+// --- Saved groups of names (users/{uid}/groups) ---
+
+export async function getGroups(uid) {
+  if (!uid) return [];
+  const snap = await getDocs(collection(db, 'users', uid, 'groups'));
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data(), members: d.data().members || [] }))
+    .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+}
+
+export async function addGroup(uid, { name, members }) {
+  const res = await addDoc(collection(db, 'users', uid, 'groups'), { name, members, createdAt: serverTimestamp() });
+  return res.id;
+}
+
+export async function updateGroup(uid, groupId, { name, members }) {
+  await updateDoc(doc(db, 'users', uid, 'groups', groupId), { name, members });
+}
+
+export async function deleteGroup(uid, groupId) {
+  await deleteDoc(doc(db, 'users', uid, 'groups', groupId));
+}

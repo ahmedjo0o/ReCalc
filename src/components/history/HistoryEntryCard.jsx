@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Card from '../ui/Card.jsx';
 import HistoryDetailsModal from './HistoryDetailsModal.jsx';
 import { useLanguage } from '../../context/LanguageContext.jsx';
+import { useCurrency } from '../../context/CurrencyContext.jsx';
 
 function formatWhen(createdAt) {
   if (!createdAt) return '';
@@ -15,9 +16,10 @@ function formatWhen(createdAt) {
 
 export default function HistoryEntryCard({ item, onDelete }) {
   const { t } = useLanguage();
+  const { money } = useCurrency();
   const [showDetails, setShowDetails] = useState(false);
-  const total = Number(item.totalOrder ?? item.total ?? 0).toFixed(2);
-  const subTotal = Number(item.subTotal ?? item.subtotal ?? 0).toFixed(2);
+  const total = money(item.totalOrder ?? item.total ?? 0);
+  const subTotal = money(item.subTotal ?? item.subtotal ?? 0);
 
   function handleDelete() {
     if (confirm(t.alertConfirmDeleteOne)) {
@@ -38,7 +40,7 @@ export default function HistoryEntryCard({ item, onDelete }) {
       {(item.discount || item.discount === 0) && (
         <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}>
           <span>{t.discount.replace(/\s*\(.*\)/, '')}</span>
-          <span>{Number(item.discount || 0).toFixed(2)}</span>
+          <span>{money(item.discount)}</span>
         </div>
       )}
 
@@ -46,7 +48,7 @@ export default function HistoryEntryCard({ item, onDelete }) {
 
       {(item.totals || []).map((p, i) => (
         <div key={i} style={{ fontSize: 13, marginBottom: 2 }}>
-          <strong>{p.name}:</strong> {Number(p.sum || 0).toFixed(2)}
+          <strong>{p.name}:</strong> {money(p.sum)}
         </div>
       ))}
 

@@ -4,18 +4,18 @@ import Button from '../ui/Button.jsx';
 import { Field, TextInput, Select } from '../ui/Field.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useLanguage } from '../../context/LanguageContext.jsx';
+import { useCurrency } from '../../context/CurrencyContext.jsx';
 import { CURRENCIES } from '../../i18n/translations.js';
 import { mapAuthErrorMessage } from '../../lib/errors.js';
-import { getUserProfile, setUserCurrency, DEFAULT_CURRENCY } from '../../lib/firestoreService.js';
 
 // Only ever rendered when signed in — ManagePage gates the whole page on
 // auth — so this assumes `user` is always present.
 export default function ProfileCard() {
   const { t } = useLanguage();
   const { user, updateDisplayName, changePassword } = useAuth();
+  const { currency, setCurrency } = useCurrency();
 
   const [displayName, setDisplayName] = useState(user?.displayName || '');
-  const [currency, setCurrency] = useState(DEFAULT_CURRENCY);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [message, setMessage] = useState('');
@@ -26,22 +26,6 @@ export default function ProfileCard() {
 
   useEffect(() => {
     setDisplayName(user?.displayName || '');
-  }, [user]);
-
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const profile = await getUserProfile(user.uid);
-        if (!cancelled) setCurrency(profile?.currency || DEFAULT_CURRENCY);
-      } catch (err) {
-        console.warn('Could not load profile:', err);
-      }
-    }
-    load();
-    return () => {
-      cancelled = true;
-    };
   }, [user]);
 
   async function handleSaveName() {
@@ -56,14 +40,12 @@ export default function ProfileCard() {
   }
 
   async function handleCurrencyChange(next) {
-    const previous = currency;
-    setCurrency(next);
+    setMessage('');
     try {
-      await setUserCurrency(user.uid, next);
+      await setCurrency(next);
       setMessage(t.currencyUpdated);
     } catch (err) {
       console.warn('Could not save currency:', err);
-      setCurrency(previous);
       setMessage(t.authGenericError);
     }
   }
@@ -103,6 +85,7 @@ export default function ProfileCard() {
             <option key={c} value={c}>{c}</option>
           ))}
         </Select>
+        <span className="muted" style={{ fontSize: '0.8rem' }}>{t.currencyHint}</span>
       </Field>
 
       <Field label={hasPasswordProvider ? t.changePasswordLabel : t.createPasswordLabel}>

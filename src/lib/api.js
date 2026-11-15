@@ -12,3 +12,9 @@ export function callCalculateBill(payload) {
 export function callExtractReceipt(payload) {
   return httpsCallable(functions, 'extractReceipt', { timeout: 120000 })(payload);
 }
+
+// Permanently deletes the caller's account and all its data. The server
+// requires { confirm: 'DELETE' } and a sign-in from the last few minutes.
+export function callDeleteAccount() {
+  return httpsCallable(functions, 'deleteAccount', { timeout: 120000 })({ confirm: 'DELETE' });
+}

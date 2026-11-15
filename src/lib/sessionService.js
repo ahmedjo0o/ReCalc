@@ -3,6 +3,11 @@ import {
   doc,
   addDoc,
   updateDoc,
+  deleteDoc,
+  getDocs,
+  query,
+  where,
+  limit,
   onSnapshot,
   arrayUnion,
   arrayRemove,
@@ -34,10 +39,11 @@ import { db } from './firebase.js';
 const SESSION_HOURS = 24;
 export const MAX_NAME_LENGTH = 40;
 
-export async function createSession({ ownerUid, ownerName, totalOrder, subTotal, discount, items, people }) {
+export async function createSession({ ownerUid, ownerName, currency, totalOrder, subTotal, discount, items, people }) {
   const ref = await addDoc(collection(db, 'sessions'), {
     ownerUid,
     ownerName: ownerName || '',
+    currency: currency || '', // the host's currency, shown to everyone on the bill
     status: 'open',
     createdAt: serverTimestamp(),
     expiresAt: Timestamp.fromMillis(Date.now() + SESSION_HOURS * 60 * 60 * 1000),
@@ -87,4 +93,21 @@ export function saveSessionResults(id, results, tip) {
 
 export function reopenSession(id) {
   return updateDoc(doc(db, 'sessions', id), { status: 'open', results: [] });
+}
+
+// The host's own bills that have not expired yet, newest first. (Expired ones
+// stay in the database until the TTL policy removes them, so they are
+// filtered out here.)
+export async function listMySessions(uid) {
+  const snap = await getDocs(query(collection(db, 'sessions'), where('ownerUid', '==', uid), limit(50)));
+  const now = Date.now();
+  const millis = (ts) => (ts && ts.toMillis ? ts.toMillis() : 0);
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .filter((s) => millis(s.expiresAt) > now)
+    .sort((a, b) => millis(b.createdAt) - millis(a.createdAt));
+}
+
+export function deleteSession(id) {
+  return deleteDoc(doc(db, 'sessions', id));
 }

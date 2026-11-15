@@ -4,11 +4,16 @@ import Button from '../ui/Button.jsx';
 import SharePreviewModal from './SharePreviewModal.jsx';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 import { renderCardsToDataUrl } from '../../lib/exportImage.js';
+import { useCurrency } from '../../context/CurrencyContext.jsx';
 
 // The per-person result cards + share/export machinery, shared by the live
 // calculator's ResultStep and the "Details" view on a saved history entry.
-export default function ResultCardsGrid({ results, showShareAll = true }) {
+// `currency` overrides the viewer's own currency (a shared bill shows the
+// host's); leave it undefined to use the signed-in user's.
+export default function ResultCardsGrid({ results, showShareAll = true, currency }) {
   const { t, language } = useLanguage();
+  const { money } = useCurrency();
+  const m = (n) => money(n, currency);
   const cardRefs = useRef([]);
   cardRefs.current = [];
   const [preview, setPreview] = useState(null); // { dataUrl, filename }
@@ -45,18 +50,18 @@ export default function ResultCardsGrid({ results, showShareAll = true }) {
       <div className="cards-grid" style={{ marginBottom: 10 }}>
         {results.map((r, i) => (
           <Card key={i} header={r.name} ref={registerCard}>
-            <div>{t.order}: {Number(r.sum || 0).toFixed(2)}</div>
-            <div>{t.vat}: {Number(r.vatShare || 0).toFixed(2)}</div>
-            <div>{t.discount.replace(/\s*\(.*\)/, '')} {Number(r.discountShare || 0).toFixed(2)}</div>
-            {r.tipShare ? <div>{t.tipShare}: {Number(r.tipShare || 0).toFixed(2)}</div> : null}
+            <div>{t.order}: {m(r.sum)}</div>
+            <div>{t.vat}: {m(r.vatShare)}</div>
+            <div>{t.discount.replace(/\s*\(.*\)/, '')} {m(r.discountShare)}</div>
+            {r.tipShare ? <div>{t.tipShare}: {m(r.tipShare)}</div> : null}
             <div style={{ marginTop: 6 }}>
-              <strong>{t.totalToPay}: {Number(r.totalPay || 0).toFixed(2)}</strong>
+              <strong>{t.totalToPay}: {m(r.totalPay)}</strong>
             </div>
             {r.items && r.items.length > 0 && (
               <div style={{ marginTop: 8, fontSize: 13 }}>
                 <strong>{t.details}</strong>
                 {r.items.map((it, idx) => (
-                  <div key={idx}>{it.label}: {Number(it.price || 0).toFixed(2)}</div>
+                  <div key={idx}>{it.label}: {m(it.price)}</div>
                 ))}
               </div>
             )}

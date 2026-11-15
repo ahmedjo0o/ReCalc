@@ -7,6 +7,7 @@ import { useFieldError } from '../../hooks/useFieldError.js';
 import { validateBillTotals } from '../../lib/validation.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { createSession } from '../../lib/sessionService.js';
+import { useCurrency } from '../../context/CurrencyContext.jsx';
 
 // assignedTo holds one of these, or a person's index in `names` as a string.
 // People are tracked by index rather than by name so two people sharing a
@@ -36,6 +37,7 @@ export default function AssignStep({ names, scannedReceipt, onBack, onCalculate,
   const [unassignedError, showUnassignedError] = useFieldError();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { currency } = useCurrency();
   const [sharing, setSharing] = useState(false);
   const [shareError, showShareError] = useFieldError(6000);
 
@@ -65,6 +67,7 @@ export default function AssignStep({ names, scannedReceipt, onBack, onCalculate,
       const id = await createSession({
         ownerUid: user.uid,
         ownerName: user.displayName || '',
+        currency,
         totalOrder: result.value.totalOrder,
         subTotal: result.value.subTotal,
         discount: result.value.discount,

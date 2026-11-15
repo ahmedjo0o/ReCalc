@@ -1,22 +1,29 @@
 import { useRef, useState } from 'react';
+import ReactCrop from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 import Button from '../ui/Button.jsx';
 import { Field, TextInput } from '../ui/Field.jsx';
 import ItemsSumStatus from './ItemsSumStatus.jsx';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 import { useFieldError } from '../../hooks/useFieldError.js';
 import { callExtractReceipt } from '../../lib/api.js';
-import { downscaleImageDataUrl } from '../../lib/imageUtils.js';
+import { downscaleImageDataUrl, cropImageDataUrl } from '../../lib/imageUtils.js';
 import { validateBillTotals } from '../../lib/validation.js';
 import { getServerErrorCode } from '../../lib/errors.js';
 
 const MAX_ORIGINAL_BYTES = 5.5 * 1024 * 1024;
+// The crop frame starts on the whole photo, so doing nothing sends the photo
+// exactly as before.
+const FULL_CROP = { unit: '%', x: 0, y: 0, width: 100, height: 100 };
 
 export default function ScanStep({ onBack, onContinue, hidden = false }) {
   const { t } = useLanguage();
   const cameraInputRef = useRef(null);
   const uploadInputRef = useRef(null);
 
-  const [imageDataUrl, setImageDataUrl] = useState(null);
+  const [imageDataUrl, setImageDataUrl] = useState(null); // shrunk copy shown on screen
+  const [originalDataUrl, setOriginalDataUrl] = useState(null); // full-size photo, used for cropping
+  const [crop, setCrop] = useState(FULL_CROP);
   const [extracting, setExtracting] = useState(false);
   // Stays on screen until the next action (new photo, retake, another
   // extract) instead of vanishing after a few seconds.
@@ -36,6 +43,8 @@ export default function ScanStep({ onBack, onContinue, hidden = false }) {
     showScanError('');
     const reader = new FileReader();
     reader.onload = async (ev) => {
+      setCrop(FULL_CROP);
+      setOriginalDataUrl(ev.target.result);
       try {
         setImageDataUrl(await downscaleImageDataUrl(ev.target.result));
       } catch (err) {
@@ -57,6 +66,8 @@ export default function ScanStep({ onBack, onContinue, hidden = false }) {
   function retake() {
     showScanError('');
     setImageDataUrl(null);
+    setOriginalDataUrl(null);
+    setCrop(FULL_CROP);
     setShowFields(false);
     if (cameraInputRef.current) cameraInputRef.current.value = '';
     if (uploadInputRef.current) uploadInputRef.current.value = '';
@@ -75,10 +86,27 @@ export default function ScanStep({ onBack, onContinue, hidden = false }) {
     setExtracting(true);
     showScanError('');
     try {
-      const commaIdx = imageDataUrl.indexOf(',');
-      const meta = imageDataUrl.slice(5, commaIdx);
+      // If the frame was pulled in, send only that part. Try the full-size
+      // photo first (sharper text); fall back to the on-screen copy, and
+      // finally to the uncropped picture, so a crop problem never blocks a scan.
+      let toSend = imageDataUrl;
+      const cropped = crop && crop.width > 5 && crop.height > 5 && (crop.width < 98 || crop.height < 98);
+      if (cropped) {
+        try {
+          toSend = await cropImageDataUrl(originalDataUrl || imageDataUrl, crop);
+        } catch (err) {
+          console.warn('Could not crop the full-size photo:', err);
+          try {
+            toSend = await cropImageDataUrl(imageDataUrl, crop);
+          } catch (err2) {
+            console.warn('Could not crop the photo, sending it whole:', err2);
+          }
+        }
+      }
+      const commaIdx = toSend.indexOf(',');
+      const meta = toSend.slice(5, commaIdx);
       const mimeType = meta.split(';')[0] || 'image/jpeg';
-      const base64Data = imageDataUrl.slice(commaIdx + 1);
+      const base64Data = toSend.slice(commaIdx + 1);
       const response = await callExtractReceipt({ imageBase64: base64Data, mimeType });
       const parsed = response.data || {};
       populateFields(parsed);
@@ -164,7 +192,10 @@ export default function ScanStep({ onBack, onContinue, hidden = false }) {
 
       {imageDataUrl && (
         <div style={{ textAlign: 'center', marginTop: 14 }}>
-          <img src={imageDataUrl} alt="Receipt preview" style={{ maxWidth: '100%', maxHeight: 420, borderRadius: 10, boxShadow: '0 4px 10px rgba(0,0,0,0.15)' }} />
+          <ReactCrop crop={crop} onChange={(_, percentCrop) => setCrop(percentCrop)} keepSelection disabled={extracting} minWidth={40} minHeight={40}>
+            <img src={imageDataUrl} alt="Receipt preview" style={{ display: 'block', maxWidth: '100%', maxHeight: 420 }} />
+          </ReactCrop>
+          <p className="muted" style={{ fontSize: '0.85rem', margin: '8px 0 0' }}>✂️ {t.cropHint}</p>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap', marginTop: 10 }}>
             <Button variant="primary" loading={extracting} onClick={extract}>{t.extractButton}</Button>
             <Button variant="secondary" onClick={retake}>{t.retakePhotoButton}</Button>

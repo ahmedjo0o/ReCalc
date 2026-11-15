@@ -5,6 +5,7 @@ import { Field, TextInput } from '../components/ui/Field.jsx';
 import ResultCardsGrid from '../components/calculator/ResultCardsGrid.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useLanguage } from '../context/LanguageContext.jsx';
+import { formatMoney } from '../context/CurrencyContext.jsx';
 import { callCalculateBill } from '../lib/api.js';
 import { mapServerErrorMessage } from '../lib/errors.js';
 import { attachTipToHistory } from '../lib/firestoreService.js';
@@ -301,6 +302,8 @@ export default function BillPage() {
   }
 
   const shareUrl = `${window.location.origin}/bill/?id=${id}`;
+  // Everyone on a shared bill sees the host's currency.
+  const fm = (n) => formatMoney(n, session.currency);
 
   return (
     <main className="bill">
@@ -315,7 +318,7 @@ export default function BillPage() {
       ) : isDone ? (
         <>
           <p style={{ textAlign: 'center' }}>{t.sharedBillDoneHint}</p>
-          <ResultCardsGrid results={session.results || []} />
+          <ResultCardsGrid results={session.results || []} currency={session.currency || ''} />
           {isOwner && (
             <div style={{ textAlign: 'center', marginTop: 16 }}>
               <Button variant="secondary" onClick={reopen}>{t.reopenButton}</Button>
@@ -343,7 +346,7 @@ export default function BillPage() {
                         {who.length === 0 ? t.nobodyYet : who.map((n) => (n === myName ? `${n} ${t.youLabel}` : n)).join(language === 'ar' ? '، ' : ', ')}
                       </span>
                     </span>
-                    <span className="bill-item__price">{Number(it.price).toFixed(2)}</span>
+                    <span className="bill-item__price">{fm(it.price)}</span>
                   </button>
                 </li>
               );
@@ -356,7 +359,7 @@ export default function BillPage() {
               <div className="sum-status__title">
                 {unclaimed.length ? t.unclaimedCount.replace('{n}', unclaimed.length) : t.allClaimed}
               </div>
-              <div className="sum-status__detail">{t.yourSubtotal.replace('{sum}', subtotalOf(myName).toFixed(2))}</div>
+              <div className="sum-status__detail">{t.yourSubtotal.replace('{sum}', fm(subtotalOf(myName)))}</div>
             </div>
           </div>
 
@@ -365,7 +368,7 @@ export default function BillPage() {
             {people.map((p) => (
               <div key={p} className="bill-person">
                 <span>{p === myName ? `${p} ${t.youLabel}` : p}</span>
-                <span>{subtotalOf(p).toFixed(2)}</span>
+                <span>{fm(subtotalOf(p))}</span>
               </div>
             ))}
           </div>

@@ -16,6 +16,7 @@ import {
   sendPasswordResetEmail,
 } from 'firebase/auth';
 import { auth } from '../lib/firebase.js';
+import { callDeleteAccount } from '../lib/api.js';
 
 const AuthContext = createContext(null);
 
@@ -155,6 +156,23 @@ export function AuthProvider({ children }) {
     return { mode: 'reset-email-sent' };
   }
 
+  // Proves it is really the account owner (password, or Google sign-in
+  // again), then asks the server to delete everything. The fresh token is
+  // what lets the server see that the sign-in just happened.
+  async function deleteAccount(password) {
+    const u = auth.currentUser;
+    if (!u) throw new Error('no user');
+    const hasPassword = (u.providerData || []).some((p) => p.providerId === 'password');
+    if (hasPassword) {
+      await reauthenticateWithCredential(u, EmailAuthProvider.credential(u.email, password));
+    } else {
+      await reauthenticateWithPopup(u, new GoogleAuthProvider());
+    }
+    await u.getIdToken(true);
+    await callDeleteAccount();
+    await firebaseSignOut(auth);
+  }
+
   const value = {
     user,
     loading,
@@ -165,6 +183,7 @@ export function AuthProvider({ children }) {
     logout,
     updateDisplayName,
     changePassword,
+    deleteAccount,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { useFieldError } from '../../hooks/useFieldError.js';
 import { useFavorites } from '../../hooks/useFavorites.js';
 import { useNoAutofillName } from '../../hooks/useNoAutofillName.js';
+import { useGroups } from '../../hooks/useGroups.js';
 
 // Plain name field for guests — favorites are a signed-in-only feature, so
 // there's no star toggle or autocomplete suggestions to show them.
@@ -24,6 +25,30 @@ export default function NamesStep({ numPeople, names, onNumPeopleChange, onNames
   const { user, loading } = useAuth();
   const [error, showError] = useFieldError();
   const { favorites, toggle } = useFavorites(user?.uid);
+  const { groups, save: saveGroup } = useGroups(user?.uid);
+
+  // One tap fills in the whole group.
+  function applyGroup(group) {
+    onNumPeopleChange(String(group.members.length));
+    onNamesChange([...group.members]);
+  }
+
+  async function saveNamesAsGroup() {
+    const members = names.map((n) => n.trim()).filter(Boolean);
+    if (members.length < 2) {
+      showError(t.groupMembersRequired);
+      return;
+    }
+    const groupName = (window.prompt(t.groupNamePlaceholder) || '').trim().slice(0, 40);
+    if (!groupName) return;
+    try {
+      await saveGroup({ name: groupName, members });
+      showError(t.groupSaved);
+    } catch (err) {
+      console.error('Could not save group:', err);
+      showError(t.authGenericError);
+    }
+  }
 
   function handleCountSubmit(e) {
     e.preventDefault();
@@ -62,6 +87,19 @@ export default function NamesStep({ numPeople, names, onNumPeopleChange, onNames
 
   return (
     <div className="step">
+      {user && groups && groups.length > 0 && (
+        <div className="group-pick">
+          <span className="group-pick__label">{t.useGroupLabel}</span>
+          <div className="chips">
+            {groups.map((g) => (
+              <button key={g.id} type="button" className="chip chip--pick" onClick={() => applyGroup(g)}>
+                {g.name} ({g.members.length})
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleCountSubmit}>
         <Field label={t.numPeople}>
           <TextInput
@@ -109,6 +147,12 @@ export default function NamesStep({ numPeople, names, onNumPeopleChange, onNames
             );
           })}
         </div>
+      )}
+
+      {user && names.length > 1 && (
+        <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: 10 }} onClick={saveNamesAsGroup}>
+          💾 {t.saveAsGroupButton}
+        </button>
       )}
 
       <span className="error-text">{error}</span>
