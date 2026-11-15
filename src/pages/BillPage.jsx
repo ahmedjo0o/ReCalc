@@ -29,7 +29,7 @@ function readSavedName(id) {
 }
 
 // Link, copy, WhatsApp and QR code — shown to the host only.
-function ShareBox({ url, t }) {
+function ShareBox({ url, t, expiresLabel }) {
   const [copied, setCopied] = useState(false);
   const [qr, setQr] = useState('');
 
@@ -65,6 +65,7 @@ function ShareBox({ url, t }) {
         <Button variant="secondary" size="sm" onClick={toggleQr}>{qr ? t.hideQrButton : t.showQrButton}</Button>
       </div>
       {qr && <img className="bill-share__qr" src={qr} alt="QR" width="220" height="220" />}
+      {expiresLabel && <p className="bill-expiry">{t.sharedBillExpiresAt.replace('{when}', expiresLabel)}</p>}
     </div>
   );
 }
@@ -111,6 +112,7 @@ export default function BillPage() {
 
   const [session, setSession] = useState(undefined); // undefined = loading, null = not found
   const [loadFailed, setLoadFailed] = useState(false);
+  const [expired, setExpired] = useState(false);
   const [myName, setMyName] = useState(() => readSavedName(id));
   const [tip, setTip] = useState('');
   const [busy, setBusy] = useState(false);
@@ -126,7 +128,9 @@ export default function BillPage() {
       },
       (err) => {
         console.error('Could not open shared bill:', err);
-        setLoadFailed(true);
+        // The rules refuse reads once a bill has expired.
+        if (err && err.code === 'permission-denied') setExpired(true);
+        else setLoadFailed(true);
       },
     );
   }, [id]);
@@ -139,6 +143,20 @@ export default function BillPage() {
   const isOwner = !!(user && session && user.uid === session.ownerUid);
   const isDone = !!session && session.status === 'done';
   const unclaimed = items.map((_, i) => i).filter((i) => claimersOf(i).length === 0);
+
+  const expiresAtMs = session && session.expiresAt && session.expiresAt.toMillis ? session.expiresAt.toMillis() : null;
+  const expiresLabel = expiresAtMs
+    ? new Date(expiresAtMs).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short' })
+    : '';
+
+  // If the page is left open, switch to the expired screen at the moment the
+  // link runs out instead of waiting for the next failed tap.
+  useEffect(() => {
+    if (!expiresAtMs) return undefined;
+    const msLeft = Math.max(0, expiresAtMs - Date.now());
+    const timer = setTimeout(() => setExpired(true), Math.min(msLeft, 2147483647));
+    return () => clearTimeout(timer);
+  }, [expiresAtMs]);
 
   function subtotalOf(name) {
     return items.reduce((sum, it, i) => {
@@ -253,6 +271,16 @@ export default function BillPage() {
 
   // ---------- Render ----------
 
+  if (expired) {
+    return (
+      <main style={{ textAlign: 'center' }}>
+        <h1 className="page-title">{t.sharedBillTitle}</h1>
+        <p>{t.sharedBillExpired}</p>
+        <Link to="/" className="btn btn-primary">{t.backToStart}</Link>
+      </main>
+    );
+  }
+
   if (!id || session === null) {
     return (
       <main style={{ textAlign: 'center' }}>
@@ -279,7 +307,8 @@ export default function BillPage() {
       <h1 className="page-title">{t.sharedBillTitle}</h1>
       {session.ownerName && <p className="page-subtitle">{t.sharedBillBy.replace('{name}', session.ownerName)}</p>}
 
-      {isOwner && !isDone && <ShareBox url={shareUrl} t={t} />}
+      {isOwner && !isDone && <ShareBox url={shareUrl} t={t} expiresLabel={expiresLabel} />}
+      {!isOwner && expiresLabel && <p className="bill-expiry">{t.sharedBillExpiresAt.replace('{when}', expiresLabel)}</p>}
 
       {!myName ? (
         <JoinForm people={people} onPick={pickName} t={t} />

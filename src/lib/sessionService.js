@@ -27,7 +27,11 @@ import { db } from './firebase.js';
 // holding the link read it and change `people` / `claims` while it is open,
 // and lets only the owner change anything else.
 
-const SESSION_DAYS = 7;
+// How long a shared link works. firestore.rules enforces the same moment
+// (expiresAt), so an expired bill cannot be opened or changed even by someone
+// who kept the link. The host's calculation is unaffected: calculateBill saves
+// it to their history, which never expires.
+const SESSION_HOURS = 24;
 export const MAX_NAME_LENGTH = 40;
 
 export async function createSession({ ownerUid, ownerName, totalOrder, subTotal, discount, items, people }) {
@@ -36,7 +40,7 @@ export async function createSession({ ownerUid, ownerName, totalOrder, subTotal,
     ownerName: ownerName || '',
     status: 'open',
     createdAt: serverTimestamp(),
-    expiresAt: Timestamp.fromMillis(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000),
+    expiresAt: Timestamp.fromMillis(Date.now() + SESSION_HOURS * 60 * 60 * 1000),
     totalOrder,
     subTotal,
     discount,

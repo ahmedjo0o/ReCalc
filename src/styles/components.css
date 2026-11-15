@@ -862,3 +862,10 @@
   padding: 4px 0;
   font-size: 0.92rem;
 }
+
+.bill-expiry {
+  font-size: 0.85rem;
+  color: #556;
+  text-align: center;
+  margin: 12px 0 0;
+}
