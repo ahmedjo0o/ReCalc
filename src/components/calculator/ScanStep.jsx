@@ -88,6 +88,7 @@ export default function ScanStep({ onBack, onContinue, hidden = false }) {
       const msg =
         code === 'rateLimitExceeded' ? t.rateLimitError
         : code === 'imageTooLarge' ? t.imageTooLargeError
+        : code === 'scanLimitReached' ? t.scanLimitError
         : t.ocrFailedError;
       showScanError(msg);
       populateFields({ totalOrder: '', subTotal: '', discount: '', items: [] });

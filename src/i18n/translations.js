@@ -151,6 +151,7 @@ export const translations = {
 
     // --- Clearer errors and confirmations ---
     imageTooLargeError: 'This photo is too large to upload. Please take it again or choose a smaller one.',
+    scanLimitError: 'Receipt scanning is busy right now. Please try again in a minute, or enter the values manually below.',
     loadFailedError: 'Could not load your data. Check your connection and try again.',
     nameSaved: 'Name saved.',
     passwordChanged: 'Password updated.',
@@ -342,6 +343,7 @@ export const translations = {
 
     // --- رسائل أخطاء وتأكيدات أوضح ---
     imageTooLargeError: 'حجم الصورة كبير جدًا. يرجى التقاطها مرة أخرى أو اختيار صورة أصغر.',
+    scanLimitError: 'خدمة مسح الفواتير مشغولة حاليًا. يرجى المحاولة بعد دقيقة، أو إدخال القيم يدويًا أدناه.',
     loadFailedError: 'تعذّر تحميل بياناتك. تحقق من اتصالك وحاول مرة أخرى.',
     nameSaved: 'تم حفظ الاسم.',
     passwordChanged: 'تم تحديث كلمة المرور.',
