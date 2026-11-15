@@ -1,9 +1,12 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Button from '../ui/Button.jsx';
 import { Field, TextInput, Select } from '../ui/Field.jsx';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 import { useFieldError } from '../../hooks/useFieldError.js';
 import { validateBillTotals } from '../../lib/validation.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { createSession } from '../../lib/sessionService.js';
 
 // assignedTo holds one of these, or a person's index in `names` as a string.
 // People are tracked by index rather than by name so two people sharing a
@@ -31,6 +34,50 @@ export default function AssignStep({ names, scannedReceipt, onBack, onCalculate,
   );
   const [fieldErrors, setFieldErrors] = useState({});
   const [unassignedError, showUnassignedError] = useFieldError();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [sharing, setSharing] = useState(false);
+  const [shareError, showShareError] = useFieldError(6000);
+
+  // Turns this receipt into a shared bill: friends open a link and tap what
+  // they ordered themselves, instead of the host assigning every item here.
+  async function handleShare() {
+    if (!user) {
+      showShareError(t.shareSignInRequired);
+      return;
+    }
+    const result = validateBillTotals({ totalOrder, subTotal, discount, tip: '0' }, t);
+    if (result.error) {
+      setFieldErrors({ [result.error.field]: result.error.message });
+      return;
+    }
+    setFieldErrors({});
+    const cleanItems = items
+      .map((it) => ({ label: it.label.trim() || t.noLabel, price: parseFloat(it.price) || 0 }))
+      .filter((it) => it.price > 0);
+    const sum = cleanItems.reduce((s, it) => s + it.price, 0);
+    if (sum === 0 || Math.abs(sum - result.value.subTotal) > 2) {
+      showShareError(t.itemsMismatchError);
+      return;
+    }
+    setSharing(true);
+    try {
+      const id = await createSession({
+        ownerUid: user.uid,
+        ownerName: user.displayName || '',
+        totalOrder: result.value.totalOrder,
+        subTotal: result.value.subTotal,
+        discount: result.value.discount,
+        items: cleanItems,
+        people: names.map((n) => n.trim()).filter(Boolean),
+      });
+      navigate(`/bill?id=${id}`);
+    } catch (err) {
+      console.error('Could not create shared bill:', err);
+      showShareError(t.shareCreateFailed);
+      setSharing(false);
+    }
+  }
 
   function updateItem(idx, key, value) {
     setItems((prev) => {
@@ -129,6 +176,12 @@ export default function AssignStep({ names, scannedReceipt, onBack, onCalculate,
     <div className="step" style={hidden ? { display: 'none' } : undefined}>
       <h2 className="page-title" style={{ fontSize: '1.2rem' }}>{t.assignStepTitle}</h2>
       <p className="page-subtitle">{t.assignStepSubtitle}</p>
+
+      <div className="share-offer">
+        <span>{t.shareWithFriendsHint}</span>
+        <Button variant="secondary" size="sm" loading={sharing} onClick={handleShare}>{t.shareWithFriendsButton}</Button>
+        <span className="error-text">{shareError}</span>
+      </div>
 
       <Field label={t.totalOrder} highlight error={fieldErrors.totalOrder}>
         <TextInput type="number" step="0.01" value={totalOrder} onChange={(e) => setTotalOrder(e.target.value)} />

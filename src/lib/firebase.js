@@ -5,8 +5,9 @@ import {
   browserSessionPersistence,
   inMemoryPersistence,
   browserPopupRedirectResolver,
+  connectAuthEmulator,
 } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getFunctions } from 'firebase/functions';
 
 // Same project as ReCalc-frontend/firebase.js — this is a public client config,
@@ -60,3 +61,11 @@ export const auth = initializeAuth(app, {
 
 export const db = getFirestore(app);
 export const functions = getFunctions(app);
+
+// Local testing only: `VITE_USE_EMULATORS=1 npm run dev` points Firestore and
+// Auth at the Firebase emulators so rules and data can be tried without
+// touching the live project. Never active in a production build.
+if (import.meta.env.DEV && import.meta.env.VITE_USE_EMULATORS === '1') {
+  connectFirestoreEmulator(db, '127.0.0.1', 8080);
+  connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+}

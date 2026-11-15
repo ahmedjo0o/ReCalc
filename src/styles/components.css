@@ -720,3 +720,145 @@
   align-items: center;
   justify-content: center;
 }
+
+/* ---------- Shared bill ---------- */
+
+.share-offer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 12px;
+  padding: 12px;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.55);
+  font-size: 0.9rem;
+}
+
+.share-offer .error-text {
+  flex-basis: 100%;
+  text-align: center;
+}
+
+.bill-share {
+  margin-bottom: 18px;
+}
+
+.bill-share__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.bill-share__actions a {
+  text-decoration: none;
+}
+
+.bill-share__qr {
+  display: block;
+  margin: 14px auto 0;
+  border-radius: 8px;
+}
+
+.bill-people-pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bill-hint {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin: 0 0 12px;
+}
+
+.bill-linkbtn {
+  font: inherit;
+  color: var(--color-accent);
+  font-weight: 700;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.bill-items {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.bill-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-family);
+  font-size: 0.95rem;
+  text-align: start;
+  color: var(--color-text);
+  background: var(--color-surface-solid);
+  border: 2px solid transparent;
+  border-radius: 14px;
+  padding: 12px 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 20, 50, 0.08);
+}
+
+.bill-item.is-mine {
+  border-color: var(--color-accent);
+  background: #eef4fb;
+}
+
+.bill-item__check {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 71, 148, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.bill-item.is-mine .bill-item__check {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.bill-item__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.bill-item__label {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.bill-item__who {
+  font-size: 0.8rem;
+  color: #556;
+}
+
+.bill-item__price {
+  flex: none;
+  font-weight: 800;
+}
+
+.bill-person {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 0.92rem;
+}

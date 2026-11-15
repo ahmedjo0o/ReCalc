@@ -36,6 +36,8 @@ jobs:
       # Give the How-to-use page a real file so it loads with a normal 200
       # status (search engines ignore pages that only exist via the 404 trick).
       - run: mkdir -p dist/how-to-use && cp dist/index.html dist/how-to-use/index.html
+      # Same for shared-bill links (/bill/?id=...), which friends open directly.
+      - run: mkdir -p dist/bill && cp dist/index.html dist/bill/index.html
 
       - uses: actions/upload-pages-artifact@v3
         with:
