@@ -160,3 +160,11 @@ export async function updateGroup(uid, groupId, { name, members }) {
 export async function deleteGroup(uid, groupId) {
   await deleteDoc(doc(db, 'users', uid, 'groups', groupId));
 }
+
+// --- Settling up (who paid the bill, and who has paid them back) ---
+// firestore.rules lets the owner change only the `settlement` field of a
+// history record, never the calculated amounts.
+export async function setHistorySettlement(uid, historyId, settlement) {
+  if (!uid || !historyId) return;
+  await updateDoc(doc(db, 'users', uid, 'history', historyId), { settlement });
+}

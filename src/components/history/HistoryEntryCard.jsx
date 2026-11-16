@@ -3,6 +3,9 @@ import Card from '../ui/Card.jsx';
 import HistoryDetailsModal from './HistoryDetailsModal.jsx';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 import { useCurrency } from '../../context/CurrencyContext.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { settlementSummary } from '../calculator/SettleUp.jsx';
+import { setHistorySettlement } from '../../lib/firestoreService.js';
 
 function formatWhen(createdAt) {
   if (!createdAt) return '';
@@ -17,7 +20,23 @@ function formatWhen(createdAt) {
 export default function HistoryEntryCard({ item, onDelete }) {
   const { t } = useLanguage();
   const { money } = useCurrency();
+  const { user } = useAuth();
   const [showDetails, setShowDetails] = useState(false);
+  // Kept here (not only in the pop-up) so the "2 of 3 paid" chip on the card
+  // updates as soon as a box is ticked.
+  const [settlement, setSettlement] = useState(item.settlement || null);
+  const [saveFailed, setSaveFailed] = useState(false);
+  const summary = settlementSummary(settlement, (item.totals || []).length);
+
+  function handleSettlement(next) {
+    setSettlement(next);
+    setHistorySettlement(user?.uid, item.id, next)
+      .then(() => setSaveFailed(false))
+      .catch((err) => {
+        console.warn('Could not save settlement:', err);
+        setSaveFailed(true);
+      });
+  }
   const total = money(item.totalOrder ?? item.total ?? 0);
   const subTotal = money(item.subTotal ?? item.subtotal ?? 0);
 
@@ -29,6 +48,13 @@ export default function HistoryEntryCard({ item, onDelete }) {
 
   return (
     <Card header={formatWhen(item.createdAt)}>
+      {summary && (
+        <div style={{ marginBottom: 8 }}>
+          <span className={`chip ${summary.done ? 'chip--ok' : 'chip--open'}`}>
+            {summary.done ? t.settleChipDone : t.settleChipProgress.replace('{paid}', summary.paid).replace('{total}', summary.owing)}
+          </span>
+        </div>
+      )}
       <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700 }}>
         <span>{t.totalToPay}:</span>
         <span>{total}</span>
@@ -61,7 +87,15 @@ export default function HistoryEntryCard({ item, onDelete }) {
         </button>
       </div>
 
-      {showDetails && <HistoryDetailsModal item={item} onClose={() => setShowDetails(false)} />}
+      {showDetails && (
+        <HistoryDetailsModal
+          item={item}
+          settlement={settlement}
+          onSettlementChange={handleSettlement}
+          settleNote={saveFailed ? t.settleSaveFailed : t.settleSavedNote}
+          onClose={() => setShowDetails(false)}
+        />
+      )}
     </Card>
   );
 }

@@ -12,6 +12,14 @@ import { useCurrency } from '../../context/CurrencyContext.jsx';
 // assignedTo holds one of these, or a person's index in `names` as a string.
 // People are tracked by index rather than by name so two people sharing a
 // name (or someone literally named "(All)") still get their own share.
+function withTimeout(promise, ms) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error('timed out')), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 const ASSIGN_ALL = 'all';
 const ASSIGN_CUSTOM = 'custom';
 
@@ -64,7 +72,9 @@ export default function AssignStep({ names, scannedReceipt, onBack, onCalculate,
     }
     setSharing(true);
     try {
-      const id = await createSession({
+      // A write that never gets an answer (bad connection) would otherwise
+      // leave the button spinning forever; give up after 20 seconds instead.
+      const id = await withTimeout(createSession({
         ownerUid: user.uid,
         ownerName: user.displayName || '',
         currency,
@@ -73,7 +83,7 @@ export default function AssignStep({ names, scannedReceipt, onBack, onCalculate,
         discount: result.value.discount,
         items: cleanItems,
         people: names.map((n) => n.trim()).filter(Boolean),
-      });
+      }), 20000);
       navigate(`/bill?id=${id}`);
     } catch (err) {
       console.error('Could not create shared bill:', err);

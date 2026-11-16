@@ -3,12 +3,13 @@ import { Link, useSearchParams } from 'react-router-dom';
 import Button from '../components/ui/Button.jsx';
 import { Field, TextInput } from '../components/ui/Field.jsx';
 import ResultCardsGrid from '../components/calculator/ResultCardsGrid.jsx';
+import SettleUp from '../components/calculator/SettleUp.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useLanguage } from '../context/LanguageContext.jsx';
 import { formatMoney } from '../context/CurrencyContext.jsx';
 import { callCalculateBill } from '../lib/api.js';
 import { mapServerErrorMessage } from '../lib/errors.js';
-import { attachTipToHistory } from '../lib/firestoreService.js';
+import { attachTipToHistory, setHistorySettlement } from '../lib/firestoreService.js';
 import {
   subscribeSession,
   joinSession,
@@ -16,6 +17,7 @@ import {
   claimForEveryone,
   saveSessionResults,
   reopenSession,
+  setSessionSettlement,
   MAX_NAME_LENGTH,
 } from '../lib/sessionService.js';
 
@@ -251,12 +253,27 @@ export default function BillPage() {
       if (historyId && tipNum) {
         attachTipToHistory(user.uid, historyId, tipNum).catch((err) => console.warn('Could not attach tip:', err));
       }
-      await saveSessionResults(id, merged, tipNum);
+      await saveSessionResults(id, merged, tipNum, historyId);
     } catch (err) {
       console.error('Shared bill calculation failed:', err);
       setError(mapServerErrorMessage(err, t));
     } finally {
       setBusy(false);
+    }
+  }
+
+  // Host only. Everyone on the link sees the ticks live; the copy on the
+  // host's history record is what remains after the link expires.
+  async function changeSettlement(next) {
+    setError('');
+    try {
+      await setSessionSettlement(id, next);
+      if (session.historyId && user) {
+        setHistorySettlement(user.uid, session.historyId, next).catch((err) => console.warn('Could not copy settlement to history:', err));
+      }
+    } catch (err) {
+      console.error('Could not save settlement:', err);
+      setError(t.sharedBillError);
     }
   }
 
@@ -319,6 +336,14 @@ export default function BillPage() {
         <>
           <p style={{ textAlign: 'center' }}>{t.sharedBillDoneHint}</p>
           <ResultCardsGrid results={session.results || []} currency={session.currency || ''} />
+          <SettleUp
+            results={session.results || []}
+            value={session.settlement || null}
+            onChange={changeSettlement}
+            readOnly={!isOwner}
+            currency={session.currency || ''}
+            note={isOwner ? t.settleSharedNote : ''}
+          />
           {isOwner && (
             <div style={{ textAlign: 'center', marginTop: 16 }}>
               <Button variant="secondary" onClick={reopen}>{t.reopenButton}</Button>

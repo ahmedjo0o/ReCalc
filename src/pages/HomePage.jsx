@@ -20,7 +20,7 @@ export default function HomePage() {
     calculate,
   } = useCalculatorFlow();
 
-  const { step, flow, numPeople, names, scannedReceipt, results, calculating, calcError } = state;
+  const { step, flow, numPeople, names, scannedReceipt, results, historyId, calculating, calcError } = state;
 
   return (
     <main>
@@ -70,7 +70,10 @@ export default function HomePage() {
 
       {step === 'result' && (
         <ResultStep
+          // New calculation, new record: start the settle-up box fresh.
+          key={historyId || 'guest'}
           results={results}
+          historyId={historyId}
           onBack={() => goToStep(flow === 'scan' ? 'assign' : 'manual')}
           onStartAgain={startAgain}
         />

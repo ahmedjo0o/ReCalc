@@ -250,6 +250,22 @@ export const translations = {
     deleteAccountFailed: 'Could not delete your account. Please try again.',
     deleteAccountReauthError: 'We could not confirm it is you. Please sign out, sign in again, and retry.',
     accountDeleted: 'Your account and all its data have been deleted.',
+
+    // --- Settle up ---
+    settleTitle: 'Settle up',
+    whoPaidLabel: 'Who paid the bill?',
+    settlePaidBy: '{name} paid the bill: {amount}.',
+    settleOwes: 'owes {name}',
+    settlePaidBack: 'has paid {name} back',
+    settleProgress: 'Collected {collected} of {total}',
+    settleAllDone: 'Everyone has paid. All settled!',
+    settleOwnShare: "{name}'s own share: {amount}",
+    settleSavedNote: 'Saved with this calculation in your history.',
+    settleGuestNote: 'Sign in before calculating to keep this in your history. As a guest it is not saved.',
+    settleSharedNote: 'Everyone with the link can see this. Only you can change it.',
+    settleSaveFailed: 'Could not save this. Check your connection and tick again.',
+    settleChipDone: 'Settled',
+    settleChipProgress: '{paid} of {total} paid back',
   },
   ar: {
     pageTitle: 'reCalc - احسب فاتورتك مع أصدقائك',
@@ -496,6 +512,22 @@ export const translations = {
     deleteAccountFailed: 'تعذّر حذف حسابك. يرجى المحاولة مرة أخرى.',
     deleteAccountReauthError: 'تعذّر التأكد من هويتك. يرجى تسجيل الخروج ثم الدخول مرة أخرى وإعادة المحاولة.',
     accountDeleted: 'تم حذف حسابك وجميع بياناته.',
+
+    // --- تسوية الحساب ---
+    settleTitle: 'تسوية الحساب',
+    whoPaidLabel: 'من دفع الفاتورة؟',
+    settlePaidBy: '{name} دفع الفاتورة: {amount}.',
+    settleOwes: 'عليه لـ {name}',
+    settlePaidBack: 'سدّد لـ {name}',
+    settleProgress: 'تم تحصيل {collected} من {total}',
+    settleAllDone: 'الجميع سدّد. تمت التسوية!',
+    settleOwnShare: 'نصيب {name}: {amount}',
+    settleSavedNote: 'محفوظ مع هذا الحساب في سجلك.',
+    settleGuestNote: 'سجّل الدخول قبل الحساب ليُحفظ هذا في سجلك. لا يُحفظ للضيوف.',
+    settleSharedNote: 'يراه كل من لديه الرابط. أنت فقط من يستطيع تعديله.',
+    settleSaveFailed: 'تعذّر الحفظ. تحقق من اتصالك ثم حدّد مرة أخرى.',
+    settleChipDone: 'تمت التسوية',
+    settleChipProgress: 'سدّد {paid} من {total}',
   },
 };
 

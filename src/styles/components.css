@@ -1118,3 +1118,49 @@
   max-height: calc(100dvh - 32px);
   overflow-y: auto;
 }
+
+/* ---------- Settle up ---------- */
+
+.settle {
+  margin-top: 16px;
+  text-align: start;
+}
+
+.settle__lead {
+  margin: 0 0 10px;
+  font-weight: 700;
+}
+
+.settle__row {
+  justify-content: space-between;
+}
+
+.settle__row.is-paid {
+  background: #e3f3e6;
+}
+
+.settle__check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 160px;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.settle__check input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  accent-color: var(--color-accent);
+}
+
+.settle__row.is-paid .settle__amount {
+  text-decoration: line-through;
+  color: #556;
+}
+
+.settle__amount {
+  font-weight: 800;
+  flex: none;
+}

@@ -12,6 +12,7 @@ const initialState = {
   names: [],
   scannedReceipt: null,
   results: [],
+  historyId: null, // the saved history record for these results (signed-in users)
   calculating: false,
   calcError: '',
 };
@@ -33,7 +34,7 @@ function reducer(state, action) {
     case 'CALCULATE_START':
       return { ...state, calculating: true, calcError: '' };
     case 'CALCULATE_SUCCESS':
-      return { ...state, calculating: false, results: action.results, step: 'result' };
+      return { ...state, calculating: false, results: action.results, historyId: action.historyId || null, step: 'result' };
     case 'CALCULATE_ERROR':
       return { ...state, calculating: false, calcError: action.message };
     case 'RESET':
@@ -100,7 +101,7 @@ export function useCalculatorFlow() {
           });
         }
 
-        dispatch({ type: 'CALCULATE_SUCCESS', results: merged });
+        dispatch({ type: 'CALCULATE_SUCCESS', results: merged, historyId });
       } catch (err) {
         console.error('calculateBill failed:', err);
         dispatch({ type: 'CALCULATE_ERROR', message: mapServerErrorMessage(err, t) });

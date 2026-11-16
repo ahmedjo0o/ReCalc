@@ -87,12 +87,14 @@ export function claimForEveryone(id, itemIndexes, people) {
   return updateDoc(doc(db, 'sessions', id), update);
 }
 
-export function saveSessionResults(id, results, tip) {
-  return updateDoc(doc(db, 'sessions', id), { status: 'done', results, tip });
+// historyId: the host's own history record for this calculation, so ticks
+// made on the shared bill can be copied there (it outlives the 24-hour link).
+export function saveSessionResults(id, results, tip, historyId) {
+  return updateDoc(doc(db, 'sessions', id), { status: 'done', results, tip, historyId: historyId || null, settlement: null });
 }
 
 export function reopenSession(id) {
-  return updateDoc(doc(db, 'sessions', id), { status: 'open', results: [] });
+  return updateDoc(doc(db, 'sessions', id), { status: 'open', results: [], historyId: null, settlement: null });
 }
 
 // The host's own bills that have not expired yet, newest first. (Expired ones
@@ -110,4 +112,9 @@ export async function listMySessions(uid) {
 
 export function deleteSession(id) {
   return deleteDoc(doc(db, 'sessions', id));
+}
+
+// Host only (the rules refuse anyone else): who paid, and who has paid back.
+export function setSessionSettlement(id, settlement) {
+  return updateDoc(doc(db, 'sessions', id), { settlement });
 }
