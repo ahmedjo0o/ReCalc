@@ -4,7 +4,7 @@ import HistoryDetailsModal from './HistoryDetailsModal.jsx';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 import { useCurrency } from '../../context/CurrencyContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { settlementSummary } from '../calculator/SettleUp.jsx';
+import { settlementSummary, withTipMerged } from '../../lib/settlement.js';
 import { setHistorySettlement } from '../../lib/firestoreService.js';
 
 function formatWhen(createdAt) {
@@ -26,7 +26,7 @@ export default function HistoryEntryCard({ item, onDelete }) {
   // updates as soon as a box is ticked.
   const [settlement, setSettlement] = useState(item.settlement || null);
   const [saveFailed, setSaveFailed] = useState(false);
-  const summary = settlementSummary(settlement, (item.totals || []).length);
+  const summary = settlementSummary(settlement, withTipMerged(item));
 
   function handleSettlement(next) {
     setSettlement(next);

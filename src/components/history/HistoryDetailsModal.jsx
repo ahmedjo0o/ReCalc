@@ -2,6 +2,7 @@ import Modal from '../ui/Modal.jsx';
 import ResultCardsGrid from '../calculator/ResultCardsGrid.jsx';
 import SettleUp from '../calculator/SettleUp.jsx';
 import { useLanguage } from '../../context/LanguageContext.jsx';
+import { withTipMerged } from '../../lib/settlement.js';
 
 function formatWhen(createdAt) {
   if (!createdAt) return '';
@@ -11,19 +12,6 @@ function formatWhen(createdAt) {
   } catch {
     return String(createdAt);
   }
-}
-
-// The stored totals never include tip (see attachTipToHistory) — merge it
-// in the same way the live result screen does, from the raw `tip` amount.
-function withTipMerged(item) {
-  const totals = item.totals || [];
-  if (!item.tip || !totals.length) return totals;
-  const perPersonTip = item.tip / totals.length;
-  return totals.map((p) => ({
-    ...p,
-    tipShare: perPersonTip,
-    totalPay: Number((p.totalPay + perPersonTip).toFixed(2)),
-  }));
 }
 
 export default function HistoryDetailsModal({ item, settlement, onSettlementChange, settleNote, onClose }) {

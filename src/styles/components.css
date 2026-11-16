@@ -1164,3 +1164,31 @@
   font-weight: 800;
   flex: none;
 }
+
+.settle__payer {
+  justify-content: space-between;
+}
+
+.settle__payer.is-on {
+  background: #eef4fb;
+}
+
+.settle__paid-input {
+  flex: 0 1 150px;
+  width: auto;
+}
+
+.settle__subhead {
+  font-size: 0.88rem;
+  font-weight: 800;
+  margin: 4px 0 8px;
+}
+
+/* Keep the name and its amount box on one line on phones. */
+.settle__payer .settle__check {
+  flex: 1 1 90px;
+}
+
+.settle__payer .settle__paid-input {
+  flex: 0 1 130px;
+}
