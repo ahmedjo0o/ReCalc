@@ -6,14 +6,34 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Privacy Policy - reCalc</title>
+  <meta name="description" content="What information reCalc collects, how it is used, how long it is kept, and how to delete it." />
+  <link rel="canonical" href="https://re-calc.com/privacy.html" />
   <link rel="stylesheet" href="styles.css" />
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-
   <script>
     // Capture page load start time as early as possible
     window.startTime = Date.now();
   </script>
   <script src="https://unpkg.com/lottie-web@5.9.4/build/player/lottie.min.js" defer></script>
+  <style>
+    .article { line-height: 1.8; }
+    .article h2 { margin-top: 28px; }
+    .article h3 { margin-top: 22px; }
+    .article table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 0.95rem; }
+    .article th, .article td { border: 1px solid rgba(0,0,0,0.12); padding: 6px 10px; text-align: start; }
+    .article th { background: rgba(0,71,148,0.08); }
+    .article .note { background: rgba(0,71,148,0.07); border-radius: 10px; padding: 10px 14px; }
+    .article .meta { color: #556; font-size: 0.9rem; }
+    .cta { text-align: center; margin: 28px 0 10px; }
+    .cta a { display: inline-block; background: #004794; color: #fff; padding: 10px 22px; border-radius: 12px; font-weight: 700; text-decoration: none; }
+    .related { margin-top: 26px; }
+    .related a { color: #004794; font-weight: 700; }
+    .post-list { list-style: none; padding: 0; margin: 0; }
+    .post-list li { background: rgba(255,255,255,0.6); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
+    .post-list a { font-size: 1.08rem; font-weight: 700; color: #004794; text-decoration: none; }
+    .post-list a:hover { text-decoration: underline; }
+    .post-list p { margin: 6px 0 0; }
+  </style>
 </head>
 <body>
   <div id="page-loader" class="active">
@@ -30,86 +50,106 @@
     <div class="container">
       <h1 class="centered-title">Privacy Policy / سياسة الخصوصية</h1>
 
-      <div>
-        <p><strong>Effective Date:</strong> November 3, 2025</p>
-        <p>Your privacy is important to us. This policy explains what information reCalc collects and how it is used.</p>
+      <div class="article">
 
-        <h3>What Information We Collect</h3>
+        <p class="meta"><strong>Last updated:</strong> November 17, 2026</p>
+        <p>This policy explains what information reCalc (re-calc.com) collects, why, how long it is kept, and the choices you have. We collect as little as the app needs to work.</p>
+
+        <h2>1. Using reCalc as a guest</h2>
         <ul>
-          <li><strong>Receipt Calculation:</strong> The totals, item prices, and person names you enter or scan are sent to a secure Cloud Function to calculate the bill split. This happens in memory on the server and isn't stored anywhere unless you're signed in, in which case only the final result is saved to your account's history.</li>
-          <li><strong>For All Users:</strong> We use Google AdSense, which uses cookies to serve personalized ads based on your prior visits to this and other websites. We also use your browser's <code>localStorage</code> to save your calculation history and favorites locally if you are not signed in.</li>
-          <li><strong>For Registered Users:</strong> When you create an account (via Email/Password or Google Sign-In), we collect and store the personal information you provide, such as your email address and display name.</li>
-          <li><strong>User-Generated Data:</strong> If you are signed in, we store your calculation history and your list of "Favorites" on our secure database (Google Firebase) to sync this data for your account.</li>
+          <li><strong>Bill amounts and names.</strong> When you calculate, the totals, item prices and the names you type are sent to our server (a Google Cloud Function) to work out each person's share. For guests, the result is sent back to your screen and not saved anywhere.</li>
+          <li><strong>Your browser.</strong> reCalc stores your language preference in your browser. If you open a shared bill, the name you choose on it is remembered in your browser for that bill.</li>
         </ul>
 
-        <h3>How We Use Your Information</h3>
+        <h2>2. Scanning a receipt</h2>
+        <p>When you scan, the photo (or the part you cropped) is sent through our server to Google's Gemini service, which reads the text and returns the items and prices. We do not store the photo. Google processes it under its own terms; for the type of service we currently use, those terms allow Google to use submitted content to improve its products. Please don't scan receipts that show information you consider private, such as a card number or a home address. You can always type the values instead.</p>
+
+        <h2>3. If you create an account</h2>
         <ul>
-          <li>To provide and maintain the app's features (like saving and syncing your history).</li>
-          <li>To authenticate you and secure your account.</li>
-          <li>To display third-party advertisements (via Google AdSense) to support the site.</li>
+          <li><strong>Account details:</strong> your email address, display name and how you sign in (email and password, or Google). Sign-in is handled by Google Firebase Authentication; we never see your password.</li>
+          <li><strong>What you save:</strong> your calculation history, settle-up records (who paid and who has paid back), favorite names, saved groups and your chosen currency. These are stored in Google Firebase and are visible only to you.</li>
         </ul>
 
-        <h3>Third-Party Services</h3>
-        <p>We rely on trusted third-party services to operate:</p>
+        <h2>4. Shared bills</h2>
+        <p>When a signed-in user shares a bill, its items, prices, the names added to it and the results can be seen by anyone who has the link or QR code. Shared bills stop working 24 hours after they are created and are then deleted automatically, normally within about a day. The person who created a bill can delete it sooner.</p>
+
+        <h2>5. Preventing abuse</h2>
+        <p>To stop automated misuse, our server counts requests for a short time, using your account ID if you are signed in or your IP address if you are not. These counters are deleted automatically after about an hour.</p>
+
+        <h2>6. Advertising and cookies</h2>
+        <p>reCalc is funded by Google AdSense. Google and its partners use cookies to show ads, which may be personalized based on your visits to this and other websites. You can turn off personalized advertising in <a href="https://myadcenter.google.com/" target="_blank" rel="noopener noreferrer">Google's ad settings</a>, and learn more in <a href="https://policies.google.com/technologies/ads" target="_blank" rel="noopener noreferrer">how Google uses information from sites that use its services</a>. Signing in also stores a sign-in token in your browser so you stay signed in.</p>
+
+        <h2>7. Who we share data with</h2>
+        <p>We do not sell your data. It is processed only by the services that run reCalc: Google Firebase and Google Cloud (accounts, database, server), Google's Gemini service (reading receipts) and Google AdSense (ads). The site itself is hosted on GitHub Pages, which receives standard technical information such as your IP address when you load a page.</p>
+
+        <h2>8. How long data is kept, and deleting it</h2>
         <ul>
-          <li><strong>Google Firebase:</strong> We use Firebase for user authentication (signing you in) and as a database (to store your history and favorites when logged in).</li>
-          <li><strong>Google AdSense:</strong> We use AdSense to display ads. Google, as a third-party vendor, uses cookies to serve these ads.</li>
+          <li>Guest calculations and receipt photos: not kept.</li>
+          <li>Shared bills: deleted automatically after they expire.</li>
+          <li>Account data: kept until you delete it. You can delete single history entries, favorites and groups at any time, or delete your whole account from <strong>Manage &rarr; Account &rarr; Delete account</strong>, which permanently removes your account and everything saved in it.</li>
         </ul>
 
-        <h3>Cookies and Tracking</h3>
-        <p>We use cookies and similar technologies (like <code>localStorage</code>) for essential functions:</p>
-        <ul>
-          <li><code>localStorage</code> is used to save history and favorites for non-logged-in users.</li>
-          <li>Cookies are used by Google AdSense for personalized advertising. You can opt out of personalized advertising by visiting Google's <a href="https://myadcenter.google.com/" target="_blank" rel="noopener noreferrer">Ad Settings</a>.</li>
-        </ul>
+        <h2>9. Children</h2>
+        <p>reCalc is not directed at children under 13 and does not knowingly collect their personal information.</p>
 
-        <h3>Changes to This Policy</h3>
-        <p>We may update this policy in the future. Any changes will be posted on this page.</p>
-        
-        <h3>Contact Us</h3>
-        <p>If you have any questions about this Privacy Policy, please <a href="contact.html">contact us</a>.</p>
+        <h2>10. Security</h2>
+        <p>Data is sent over encrypted connections, and database rules make sure each account can only read and change its own data. No online service can be perfectly secure, but we limit what we collect so there is less to protect.</p>
+
+        <h2>11. Changes and contact</h2>
+        <p>If this policy changes, the new version will be posted on this page with a new date. For any question, or to ask about your data, please <a href="contact.html">contact us</a>.</p>
+
       </div>
 
       <hr style="margin: 30px 0;" />
 
-      <div dir="rtl">
-        <p><strong>تاريخ السريان:</strong> 3 نوفمبر 2025</p>
-        <p>خصوصيتك تهمنا. هذه السياسة تشرح المعلومات التي يجمعها reCalc وكيف يتم استخدامها.</p>
+      <div class="article" dir="rtl">
 
-        <h3>ما هي المعلومات التي نجمعها؟</h3>
+        <p class="meta"><strong>آخر تحديث:</strong> 17 نوفمبر 2026</p>
+        <p>توضح هذه السياسة المعلومات التي يجمعها reCalc (re-calc.com)، وسبب جمعها، ومدة الاحتفاظ بها، والخيارات المتاحة لك. نحن نجمع أقل قدر يحتاجه التطبيق ليعمل.</p>
+
+        <h2>1. استخدام reCalc كضيف</h2>
         <ul>
-          <li><strong>حساب الفاتورة:</strong> يتم إرسال الإجماليات وأسعار الأصناف وأسماء الأشخاص التي تدخلها أو تمسحها ضوئيًا إلى دالة سحابية آمنة لحساب توزيع الفاتورة. تتم هذه المعالجة في ذاكرة الخادم مؤقتًا ولا يتم تخزينها في أي مكان إلا إذا كنت مسجلاً للدخول، وحينها يُحفظ فقط ناتج الحساب النهائي في سجل حسابك.</li>
-          <li><strong>لجميع المستخدمين:</strong> نستخدم خدمة Google AdSense، والتي تستخدم ملفات تعريف الارتباط (Cookies) لعرض إعلانات مخصصة بناءً على زياراتك السابقة لهذا الموقع والمواقع الأخرى. نستخدم أيضًا <code>localStorage</code> في متصفحك لحفظ "سجل الحسابات" و "المفضلة" محليًا إذا لم تكن مسجلاً للدخول.</li>
-          <li><strong>للمستخدمين المسجلين:</strong> عند إنشاء حساب (عبر البريد الإلكتروني أو تسجيل الدخول بحساب جوجل)، نقوم بجمع وتخزين المعلومات الشخصية التي تقدمها، مثل عنوان بريدك الإلكتروني واسم العرض.</li>
-          <li><strong>البيانات التي ينشئها المستخدم:</strong> إذا قمت بتسجيل الدخول، فإننا نقوم بتخزين "سجل الحسابات" و "قائمة المفضلة" الخاصة بك في قاعدة بياناتنا الآمنة (Google Firebase) لمزامنة هذه البيانات مع حسابك.</li>
+          <li><strong>مبالغ الفاتورة والأسماء.</strong> عند الحساب، تُرسل الإجماليات وأسعار الأصناف والأسماء التي تكتبها إلى خادمنا (دالة سحابية من Google) لحساب نصيب كل شخص. بالنسبة للضيوف، تُعاد النتيجة إلى شاشتك ولا تُحفظ في أي مكان.</li>
+          <li><strong>متصفحك.</strong> يحفظ reCalc اللغة التي اخترتها في متصفحك. وإذا فتحت فاتورة مشتركة، يُحفظ الاسم الذي اخترته فيها في متصفحك لتلك الفاتورة.</li>
         </ul>
 
-        <h3>كيف نستخدم معلوماتك؟</h3>
+        <h2>2. مسح الفاتورة</h2>
+        <p>عند المسح، تُرسل الصورة (أو الجزء الذي قصصته) عبر خادمنا إلى خدمة Gemini من Google، التي تقرأ النص وتعيد الأصناف والأسعار. نحن لا نحتفظ بالصورة. تعالج Google الصورة وفق شروطها الخاصة؛ وبالنسبة لنوع الخدمة الذي نستخدمه حاليًا، تسمح هذه الشروط لـ Google باستخدام المحتوى المرسل لتحسين منتجاتها. لذلك يُرجى عدم مسح فواتير تحتوي على معلومات تعتبرها خاصة، مثل رقم بطاقة أو عنوان منزل. ويمكنك دائمًا كتابة القيم يدويًا.</p>
+
+        <h2>3. إذا أنشأت حسابًا</h2>
         <ul>
-          <li>لتوفير وصيانة ميزات التطبيق (مثل حفظ ومزامنة سجلك).</li>
-          <li>للتحقق من هويتك وتأمين حسابك.</li>
-          <li>لعرض إعلانات من طرف ثالث (عبر Google AdSense) لدعم الموقع.</li>
+          <li><strong>بيانات الحساب:</strong> بريدك الإلكتروني واسم العرض وطريقة تسجيل الدخول (البريد وكلمة المرور، أو جوجل). تتولى خدمة Google Firebase Authentication تسجيل الدخول؛ ولا نرى كلمة مرورك أبدًا.</li>
+          <li><strong>ما تحفظه:</strong> سجل حساباتك، وسجلات التسوية (من دفع ومن سدّد)، والأسماء المفضلة، والمجموعات المحفوظة، والعملة التي اخترتها. تُحفظ هذه البيانات في Google Firebase ولا يراها غيرك.</li>
         </ul>
 
-        <h3>خدمات الأطراف الثالثة</h3>
-        <p>نحن نعتمد على خدمات موثوقة من أطراف ثالثة لتشغيل التطبيق:</p>
+        <h2>4. الفواتير المشتركة</h2>
+        <p>عندما يشارك مستخدم مسجّل فاتورة، يمكن لأي شخص لديه الرابط أو رمز QR رؤية أصنافها وأسعارها والأسماء المضافة إليها والنتائج. تتوقف الفواتير المشتركة عن العمل بعد 24 ساعة من إنشائها ثم تُحذف تلقائيًا، عادةً خلال يوم تقريبًا. ويمكن لمن أنشأ الفاتورة حذفها قبل ذلك.</p>
+
+        <h2>5. منع إساءة الاستخدام</h2>
+        <p>لمنع الاستخدام الآلي المسيء، يحسب خادمنا عدد الطلبات لفترة قصيرة باستخدام معرّف حسابك إن كنت مسجلاً، أو عنوان IP إن لم تكن. وتُحذف هذه العدادات تلقائيًا بعد ساعة تقريبًا.</p>
+
+        <h2>6. الإعلانات وملفات تعريف الارتباط</h2>
+        <p>يُموَّل reCalc من Google AdSense. تستخدم Google وشركاؤها ملفات تعريف الارتباط لعرض الإعلانات، وقد تكون مخصصة بناءً على زياراتك لهذا الموقع ومواقع أخرى. يمكنك إيقاف الإعلانات المخصصة من <a href="https://myadcenter.google.com/" target="_blank" rel="noopener noreferrer">إعدادات الإعلانات في Google</a>، ومعرفة المزيد في صفحة <a href="https://policies.google.com/technologies/ads" target="_blank" rel="noopener noreferrer">كيف تستخدم Google المعلومات من المواقع التي تستخدم خدماتها</a>. كما يحفظ تسجيل الدخول رمزًا في متصفحك لتبقى مسجلاً.</p>
+
+        <h2>7. مع من نشارك البيانات</h2>
+        <p>نحن لا نبيع بياناتك. تُعالج فقط من خلال الخدمات التي يعمل بها reCalc: Google Firebase وGoogle Cloud (الحسابات وقاعدة البيانات والخادم)، وخدمة Gemini من Google (قراءة الفواتير)، وGoogle AdSense (الإعلانات). والموقع نفسه مستضاف على GitHub Pages، التي تتلقى معلومات تقنية معتادة مثل عنوان IP عند تحميل الصفحة.</p>
+
+        <h2>8. مدة الاحتفاظ بالبيانات وحذفها</h2>
         <ul>
-          <li><strong>Google Firebase:</strong> نستخدم Firebase للمصادقة (تسجيل دخولك) وكقاعدة بيانات (لتخزين سجلك ومفضلاتك عند تسجيل الدخول).</li>
-          <li><strong>Google AdSense:</strong> نستخدم AdSense لعرض الإعلانات. تستخدم جوجل، كطرف ثالث، ملفات تعريف الارتباط لخدمة هذه الإعلانات.</li>
+          <li>حسابات الضيوف وصور الفواتير: لا يُحتفظ بها.</li>
+          <li>الفواتير المشتركة: تُحذف تلقائيًا بعد انتهاء صلاحيتها.</li>
+          <li>بيانات الحساب: تبقى حتى تحذفها. يمكنك حذف أي عملية من السجل أو أي اسم مفضل أو مجموعة في أي وقت، أو حذف حسابك بالكامل من <strong>الإدارة &larr; الحساب &larr; حذف الحساب</strong>، وهو ما يحذف حسابك وكل ما حُفظ فيه نهائيًا.</li>
         </ul>
 
-        <h3>ملفات تعريف الارتباط (Cookies) والتتبع</h3>
-        <p>نستخدم ملفات تعريف الارتباط والتقنيات المشابهة (مثل <code>localStorage</code>) للوظائف الأساسية:</p>
-        <ul>
-          <li>يتم استخدام <code>localStorage</code> لحفظ السجل والمفضلات للمستخدمين غير المسجلين.</li>
-          <li>تُستخدم ملفات تعريف الارتباط بواسطة Google AdSense للإعلانات المخصصة. يمكنك إلغاء الاشتراك في الإعلانات المخصصة عن طريق زيارة <a href="https://myadcenter.google.com/" target="_blank" rel="noopener noreferrer">إعدادات الإعلانات</a> الخاصة بجوجل.</li>
-        </ul>
+        <h2>9. الأطفال</h2>
+        <p>reCalc غير موجّه للأطفال دون 13 عامًا، ولا يجمع معلوماتهم الشخصية عن علم.</p>
 
-        <h3>التغييرات على هذه السياسة</h3>
-        <p>قد نقوم بتحديث هذه السياسة في المستقبل. سيتم نشر أي تغييرات على هذه الصفحة.</p>
+        <h2>10. الأمان</h2>
+        <p>تُرسل البيانات عبر اتصالات مشفرة، وتضمن قواعد قاعدة البيانات أن كل حساب لا يستطيع قراءة أو تعديل إلا بياناته. لا توجد خدمة إلكترونية آمنة تمامًا، لكننا نقلل ما نجمعه حتى يكون هناك أقل ما يمكن لحمايته.</p>
 
-        <h3>اتصل بنا</h3>
-        <p>إذا كان لديك أي أسئلة حول سياسة الخصوصية هذه، يرجى <a href="contact.html">التواصل معنا</a>.</p>
+        <h2>11. التغييرات والتواصل</h2>
+        <p>إذا تغيّرت هذه السياسة، ستُنشر النسخة الجديدة في هذه الصفحة بتاريخ جديد. لأي سؤال، أو للاستفسار عن بياناتك، يُرجى <a href="contact.html">التواصل معنا</a>.</p>
+
       </div>
 
       <div style="text-align: center; margin-top: 30px;">
@@ -118,7 +158,6 @@
     </div>
   </div>
 
-  <script src="translations.js"></script>
-  <script src="main.js"></script>
+  <script src="static-page.js"></script>
 </body>
 </html>

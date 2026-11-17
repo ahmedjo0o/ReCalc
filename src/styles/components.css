@@ -29,7 +29,9 @@
 }
 
 .top-bar__logo img {
-  height: 44px;
+  /* Grows with the screen: about 64px tall on a phone, 96px on a computer. */
+  height: clamp(64px, 9vw, 96px);
+  width: auto;
   display: block;
 }
 

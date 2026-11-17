@@ -5,15 +5,35 @@
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3771202695871772" crossorigin="anonymous"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>About - reCalc</title>
+  <title>About reCalc - The Fair Way to Split a Bill</title>
+  <meta name="description" content="reCalc is a free bill-splitting web app that gives everyone their exact share of a restaurant bill, including tax, service and discounts." />
+  <link rel="canonical" href="https://re-calc.com/about.html" />
   <link rel="stylesheet" href="styles.css" />
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-
   <script>
     // Capture page load start time as early as possible
     window.startTime = Date.now();
   </script>
   <script src="https://unpkg.com/lottie-web@5.9.4/build/player/lottie.min.js" defer></script>
+  <style>
+    .article { line-height: 1.8; }
+    .article h2 { margin-top: 28px; }
+    .article h3 { margin-top: 22px; }
+    .article table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 0.95rem; }
+    .article th, .article td { border: 1px solid rgba(0,0,0,0.12); padding: 6px 10px; text-align: start; }
+    .article th { background: rgba(0,71,148,0.08); }
+    .article .note { background: rgba(0,71,148,0.07); border-radius: 10px; padding: 10px 14px; }
+    .article .meta { color: #556; font-size: 0.9rem; }
+    .cta { text-align: center; margin: 28px 0 10px; }
+    .cta a { display: inline-block; background: #004794; color: #fff; padding: 10px 22px; border-radius: 12px; font-weight: 700; text-decoration: none; }
+    .related { margin-top: 26px; }
+    .related a { color: #004794; font-weight: 700; }
+    .post-list { list-style: none; padding: 0; margin: 0; }
+    .post-list li { background: rgba(255,255,255,0.6); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
+    .post-list a { font-size: 1.08rem; font-weight: 700; color: #004794; text-decoration: none; }
+    .post-list a:hover { text-decoration: underline; }
+    .post-list p { margin: 6px 0 0; }
+  </style>
 </head>
 <body>
   <div id="page-loader" class="active">
@@ -21,46 +41,87 @@
   </div>
 
   <div id="page-wrapper">
-    <!-- Logo -->
     <div style="text-align: center; margin-top: 50px;">
       <a href="/">
         <img src="logo.svg" alt="ReCalc Logo" style="max-width: 320px; height: auto;" />
       </a>
     </div>
 
-    <!-- Content -->
     <div class="container">
-      <h1 class="centered-title">About us / من نحن؟</h1>
+      <h1 class="centered-title">About reCalc / عن reCalc</h1>
 
-      <!-- English Section -->
-      
-      <p><strong>reCalc</strong> is a simple, lightweight web app created to help people easily split receipts and bills between friends, family, or team members. Whether you're out at a café, traveling, or sharing expenses at an event, reCalc makes the process fast, fair, and frustration-free.</p>
-      
-	  <p>This tool was built with simplicity in mind, with no user registration required to use it. Your receipt values are sent securely to our server only to calculate and verify your split — nothing is stored unless you choose to sign in, and even then only your own calculation history is saved to your account.</p>
-	  
-	  <p>If you have feedback or ideas to improve reCalc, feel free to reach out through the contact page.</p>
+      <div class="article">
 
-      <hr style="margin: 30px 0;" />
+        <p><strong>reCalc</strong> is a free web app that splits restaurant, café and shop bills fairly. Instead of dividing the total equally, it works out what each person actually ordered and gives everyone their exact share of the VAT, service charge, discount and tip. It works in English and Arabic, on any phone or computer, with nothing to install.</p>
 
-      <!-- Arabic Section -->
-      <div dir="rtl">
-        
-        <p><strong>reCalc</strong> هو تطبيق ويب بسيط وخفيف يساعدك على تقسيم الفواتير والمصروفات بين الأصدقاء أو العائلة أو زملاء الفريق بسهولة. سواء كنت في مقهى، أو في رحلة، أو في مناسبة جماعية، يوفّر reCalc تجربة سريعة وعادلة وخالية من التعقيد.</p>
+        <h2>Why reCalc exists</h2>
+        <p>Splitting a bill sounds simple until the receipt arrives. One person had a coffee, another had a full meal, two people shared a dessert, and the total includes tax and service that nobody wants to work out on a phone calculator at the table. The usual shortcut, dividing everything equally, quietly makes the lighter eaters pay for the others. reCalc was built to make the fair answer as quick as the lazy one.</p>
 
-        <p>تم تصميم هذا التطبيق ببساطة ودون الحاجة لتسجيل حساب لاستخدامه. تُرسَل قيم فاتورتك بشكل آمن إلى خادمنا فقط لحساب توزيع الفاتورة والتحقق منه — ولا يتم تخزين أي شيء إلا إذا اخترت تسجيل الدخول، وحتى في هذه الحالة يُحفظ فقط سجل حساباتك الخاص بحسابك.</p>
+        <h2>What reCalc does</h2>
+        <ul>
+          <li><strong>Reads receipts from a photo.</strong> Take a picture of the printed receipt and reCalc reads the items, prices and totals, including Arabic receipts. Every value is shown for you to check before you continue.</li>
+          <li><strong>Splits by what each person ordered.</strong> Assign every item to the person who ordered it, or share an item between some or all of the group.</li>
+          <li><strong>Divides tax and service in proportion.</strong> Extras are charged on the items, so each person pays them in proportion to their own order.</li>
+          <li><strong>Lets friends choose their own items.</strong> Share a link or QR code, and everyone ticks what they ordered on their own phone. Friends don't need an account.</li>
+          <li><strong>Keeps track of who has paid.</strong> Record who paid the restaurant, even when several people paid part of it, and tick people off as they pay back.</li>
+          <li><strong>Remembers your regulars.</strong> With a free account you can save groups of friends, favorite names and your past calculations.</li>
+        </ul>
 
-        <p>إذا كان لديك أي اقتراحات أو تعليقات، يسعدنا تواصلك من خلال صفحة "تواصل معنا".</p>
+        <h2>Our principles</h2>
+        <ul>
+          <li><strong>Fair by default.</strong> The calculation is done on our server from the items themselves, so the numbers everyone sees are the same and can't be quietly changed.</li>
+          <li><strong>Private by default.</strong> You can use reCalc as a guest and nothing about your bill is kept. If you sign in, your data belongs to your account, and you can delete the account and everything in it at any time. Read the <a href="privacy.html">Privacy Policy</a> for the details.</li>
+          <li><strong>Free to use.</strong> reCalc is supported by advertising, so splitting bills, scanning receipts and sharing results cost nothing.</li>
+        </ul>
+
+        <h2>Who it is for</h2>
+        <p>Friends eating out, colleagues ordering lunch together, families on a trip, flatmates sharing a delivery order: anyone who has ever stared at a receipt wondering who owes what.</p>
+
+        <h2>Get in touch</h2>
+        <p>reCalc is an independent project that keeps improving based on what people ask for. If you have an idea, found a mistake, or a receipt that didn't scan well, please <a href="contact.html">contact us</a>. New to reCalc? The <a href="/how-to-use/">step-by-step guide</a> and the <a href="blog.html">blog</a> are good places to start.</p>
 
       </div>
 
-      <!-- Back Button -->
+      <hr style="margin: 30px 0;" />
+
+      <div class="article" dir="rtl">
+
+        <p><strong>reCalc</strong> تطبيق ويب مجاني لتقسيم فواتير المطاعم والكافيهات والمتاجر بعدل. بدلاً من تقسيم الإجمالي بالتساوي، يحسب ما طلبه كل شخص فعلاً ويعطي كل واحد نصيبه الدقيق من ضريبة القيمة المضافة والخدمة والخصم والإكرامية. يعمل بالعربية والإنجليزية، على أي هاتف أو كمبيوتر، دون تثبيت أي شيء.</p>
+
+        <h2>لماذا reCalc؟</h2>
+        <p>يبدو تقسيم الفاتورة أمرًا بسيطًا حتى تصل الفاتورة. أحدهم طلب قهوة فقط، وآخر طلب وجبة كاملة، واثنان تشاركا حلوى، والإجمالي يشمل ضريبة وخدمة لا يريد أحد حسابها على آلة حاسبة الهاتف على الطاولة. والحل المعتاد، أي التقسيم بالتساوي، يجعل من طلب أقل يدفع عن الآخرين دون أن يشعر أحد. صُمم reCalc ليجعل الإجابة العادلة بسرعة الإجابة السهلة.</p>
+
+        <h2>ماذا يفعل reCalc؟</h2>
+        <ul>
+          <li><strong>يقرأ الفاتورة من صورة.</strong> التقط صورة للفاتورة المطبوعة وسيقرأ reCalc الأصناف والأسعار والإجماليات، بما فيها الفواتير العربية. وتظهر كل القيم لتراجعها قبل المتابعة.</li>
+          <li><strong>يقسّم حسب ما طلبه كل شخص.</strong> أسند كل صنف لمن طلبه، أو قسّم الصنف بين بعض أفراد المجموعة أو جميعهم.</li>
+          <li><strong>يوزّع الضريبة والخدمة بالنسبة.</strong> الإضافات تُحسب على الأصناف، لذلك يدفعها كل شخص بنسبة طلبه.</li>
+          <li><strong>يترك لأصدقائك اختيار أصنافهم.</strong> شارك رابطًا أو رمز QR، وسيختار كل شخص ما طلبه من هاتفه. ولا يحتاج أصدقاؤك إلى حساب.</li>
+          <li><strong>يتابع من سدّد.</strong> سجّل من دفع للمطعم، حتى لو دفع أكثر من شخص جزءًا من الفاتورة، وحدّد من سدّد لك.</li>
+          <li><strong>يتذكر المعتادين.</strong> بحساب مجاني يمكنك حفظ مجموعات أصدقائك والأسماء المفضلة وحساباتك السابقة.</li>
+        </ul>
+
+        <h2>مبادئنا</h2>
+        <ul>
+          <li><strong>العدل أولاً.</strong> يتم الحساب على خادمنا من الأصناف نفسها، فيرى الجميع الأرقام نفسها ولا يمكن تغييرها خفية.</li>
+          <li><strong>الخصوصية أولاً.</strong> يمكنك استخدام reCalc كضيف دون أن يُحفظ أي شيء عن فاتورتك. وإذا سجّلت الدخول فبياناتك تخص حسابك، ويمكنك حذف الحساب وكل ما فيه في أي وقت. اقرأ <a href="privacy.html">سياسة الخصوصية</a> للتفاصيل.</li>
+          <li><strong>مجاني.</strong> يُموَّل reCalc من الإعلانات، لذلك تقسيم الفواتير ومسحها ومشاركة النتائج كلها بلا مقابل.</li>
+        </ul>
+
+        <h2>لمن هذا التطبيق؟</h2>
+        <p>للأصدقاء في المطاعم، والزملاء الذين يطلبون الغداء معًا، والعائلات في الرحلات، وشركاء السكن في طلبات التوصيل: لكل من نظر يومًا إلى فاتورة متسائلاً من عليه كم.</p>
+
+        <h2>تواصل معنا</h2>
+        <p>reCalc مشروع مستقل يتطور باستمرار حسب ما يطلبه المستخدمون. إذا كانت لديك فكرة، أو وجدت خطأ، أو لم تُقرأ فاتورتك جيدًا، يسعدنا <a href="contact.html">تواصلك معنا</a>. جديد على reCalc؟ ابدأ بـ <a href="/how-to-use/">دليل الاستخدام خطوة بخطوة</a> و<a href="blog.html">المدونة</a>.</p>
+
+      </div>
+
       <div style="text-align: center; margin-top: 30px;">
         <button onclick="window.location.href='/'">⬅ Back / رجوع</button>
       </div>
     </div>
   </div>
 
-  <script src="translations.js"></script>
-  <script src="main.js"></script>
+  <script src="static-page.js"></script>
 </body>
 </html>
