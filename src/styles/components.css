@@ -1195,16 +1195,25 @@
 
 /* ---------- Home page information ---------- */
 
-.home-info {
-  margin-top: 32px;
-  padding-top: 24px;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+/* Its own, quieter box below the main panel, so it reads as background
+   information rather than part of the calculator. */
+.info-panel {
+  max-width: 1000px;
+  width: 90%;
+  box-sizing: border-box;
+  margin: -12px auto 32px;
+  padding: clamp(18px, 3vw, 28px);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.32);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  font-size: 0.92rem;
   line-height: 1.7;
+  color: #24313f;
 }
 
 .home-info__title {
   text-align: center;
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 800;
   margin: 0 0 10px;
 }
@@ -1284,4 +1293,89 @@
   .home-info__how li {
     flex-direction: column;
   }
+}
+
+/* ---------- Landing: choose how to split ---------- */
+
+.method {
+  text-align: center;
+  padding: 8px 0 4px;
+}
+
+.method__title {
+  font-size: clamp(1.45rem, 3.4vw, 2rem);
+  font-weight: 800;
+  margin: 0 0 8px;
+  color: var(--color-text);
+}
+
+.method__subtitle {
+  margin: 0 auto 24px;
+  max-width: 520px;
+  color: #3a4654;
+}
+
+.method__choices {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+@media (min-width: 600px) {
+  .method__choices {
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+}
+
+.method-choice {
+  font-family: var(--font-family);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 150px;
+  padding: 22px 18px;
+  border-radius: 18px;
+  border: 2px solid rgba(0, 71, 148, 0.25);
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--color-accent);
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(0, 20, 50, 0.12);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.method-choice:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 30px rgba(0, 20, 50, 0.2);
+}
+
+.method-choice:focus-visible {
+  outline: 3px solid rgba(0, 71, 148, 0.45);
+  outline-offset: 3px;
+}
+
+.method-choice--primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #fff;
+  box-shadow: 0 10px 26px rgba(0, 71, 148, 0.4);
+}
+
+.method-choice__icon {
+  font-size: 2.4rem;
+  line-height: 1;
+}
+
+.method-choice__label {
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.method-choice__hint {
+  font-size: 0.88rem;
+  opacity: 0.85;
 }

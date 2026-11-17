@@ -23,6 +23,9 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
+      {/* Extra content shown below the main panel on some screens (the home
+          page puts its "how it works" / FAQ box here via a portal). */}
+      <div id="below-panel" />
       <Footer />
     </div>
   );

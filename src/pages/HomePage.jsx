@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import MethodChoiceStep from '../components/calculator/MethodChoiceStep.jsx';
 import ScanStep from '../components/calculator/ScanStep.jsx';
 import NamesStep from '../components/calculator/NamesStep.jsx';
@@ -20,6 +22,13 @@ export default function HomePage() {
     startAgain,
     calculate,
   } = useCalculatorFlow();
+
+  // The information box lives in its own panel below the calculator (see
+  // #below-panel in App.jsx), and only on the start screen.
+  const [belowPanel, setBelowPanel] = useState(null);
+  useEffect(() => {
+    setBelowPanel(document.getElementById('below-panel'));
+  }, []);
 
   const { step, flow, numPeople, names, scannedReceipt, results, historyId, calculating, calcError } = state;
 
@@ -81,7 +90,7 @@ export default function HomePage() {
       )}
 
       {step === 'method' && <InstallAppButton />}
-      {step === 'method' && <HomeInfo />}
+      {step === 'method' && belowPanel && createPortal(<HomeInfo />, belowPanel)}
     </main>
   );
 }

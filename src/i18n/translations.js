@@ -89,6 +89,11 @@ export const translations = {
 
     // --- Receipt scanning / assignment flow ---
     chooseMethodTitle: 'How would you like to split the bill?',
+    chooseMethodSubtitle: 'Everyone pays for what they ordered, plus their fair share of tax and service.',
+    scanMethodTitle: 'Scan Receipt',
+    scanMethodHint: 'Take a photo and we read the items for you',
+    manualMethodTitle: 'Enter Manually',
+    manualMethodHint: "Type the totals and each person's order",
     scanMethodButton: '📷 Scan Receipt',
     manualMethodButton: '✍️ Enter Manually',
     scanStepTitle: 'Scan Your Receipt',
@@ -362,6 +367,11 @@ export const translations = {
 
     // --- خطوات مسح الفاتورة وتوزيع الأصناف ---
     chooseMethodTitle: 'كيف تريد تقسيم الفاتورة؟',
+    chooseMethodSubtitle: 'يدفع كل شخص ثمن ما طلبه، مع نصيبه العادل من الضريبة والخدمة.',
+    scanMethodTitle: 'مسح الفاتورة',
+    scanMethodHint: 'التقط صورة وسنقرأ الأصناف بدلاً منك',
+    manualMethodTitle: 'إدخال يدوي',
+    manualMethodHint: 'اكتب الإجماليات وطلب كل شخص',
     scanMethodButton: '📷 مسح الفاتورة',
     manualMethodButton: '✍️ إدخال يدوي',
     scanStepTitle: 'امسح فاتورتك',

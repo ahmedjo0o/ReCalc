@@ -10,7 +10,7 @@ export default function HomeInfo() {
   const c = homeContent[language] || homeContent.en;
 
   return (
-    <section className="home-info" aria-labelledby="home-info-title">
+    <section className="info-panel home-info" aria-labelledby="home-info-title">
       <h2 id="home-info-title" className="home-info__title">{c.title}</h2>
       <p className="home-info__intro">{c.intro}</p>
 
