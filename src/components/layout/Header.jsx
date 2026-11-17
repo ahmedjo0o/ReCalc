@@ -7,7 +7,10 @@ import { useLanguage } from '../../context/LanguageContext.jsx';
 
 export default function Header() {
   const { t, language, toggleLanguage } = useLanguage();
-  const { user, loading, authTiming, logout } = useAuth();
+  const { user, loading, savedUser, authTiming, logout } = useAuth();
+  // A returning user is greeted at once from the session saved on this
+  // device; the spinner only shows when there is nothing saved to go on.
+  const shownUser = user || savedUser;
   const [authOpen, setAuthOpen] = useState(false);
   const showDebugTiming = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debug') === '1';
 
@@ -24,12 +27,12 @@ export default function Header() {
 
       <div className="auth-box-row">
         <div className="auth-box">
-          {loading ? (
+          {loading && !savedUser ? (
             <span className="auth-box__spinner" aria-label="Checking sign-in status" />
-          ) : user ? (
+          ) : shownUser ? (
             <>
               <span style={{ fontSize: 13, fontWeight: 700 }}>
-                {t.authWelcome.replace('{name}', user.displayName || user.email || t.guestLabel)}
+                {t.authWelcome.replace('{name}', shownUser.displayName || shownUser.email || t.guestLabel)}
               </span>
               <Link to="/manage">
                 <Button variant="secondary" size="sm">{t.authManage}</Button>

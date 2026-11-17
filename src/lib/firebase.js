@@ -4,7 +4,6 @@ import {
   browserLocalPersistence,
   browserSessionPersistence,
   inMemoryPersistence,
-  browserPopupRedirectResolver,
   connectAuthEmulator,
 } from 'firebase/auth';
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
@@ -46,10 +45,10 @@ export const app = initializeApp(firebaseConfig);
 // between backends, itself a real async storage operation).
 export const auth = initializeAuth(app, {
   persistence: [browserLocalPersistence, browserSessionPersistence, inMemoryPersistence],
-  // initializeAuth (unlike getAuth) doesn't include this by default — without
-  // it, signInWithPopup/signInWithRedirect/getRedirectResult all throw
-  // auth/argument-error.
-  popupRedirectResolver: browserPopupRedirectResolver,
+  // No popupRedirectResolver here on purpose: Google sign-in now goes through
+  // Google Identity Services (lib/googleSignIn.js), so nothing needs Firebase's
+  // pop-up/redirect helper at startup. The few places that still open a
+  // Firebase pop-up pass the resolver themselves (see AuthContext.jsx).
 });
 
 export const db = getFirestore(app);

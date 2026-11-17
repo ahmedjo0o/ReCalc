@@ -1425,3 +1425,23 @@
 .site-footer__recaptcha a {
   color: inherit;
 }
+
+/* Google's own sign-in button (drawn by Google inside .google-box__button). */
+.google-box {
+  min-height: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.google-box__button {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.google-box__loading {
+  margin: 10px 0 0;
+  font-size: 0.85rem;
+  color: #556;
+}

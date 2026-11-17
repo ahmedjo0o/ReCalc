@@ -1,19 +1,63 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Modal from '../ui/Modal.jsx';
 import Button from '../ui/Button.jsx';
 import { TextInput } from '../ui/Field.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 import { mapAuthErrorMessage } from '../../lib/errors.js';
+import { renderGoogleButton } from '../../lib/googleSignIn.js';
 
 export default function AuthModal({ onClose, initialMode = 'signin' }) {
-  const { t } = useLanguage();
-  const { signIn, signUp, signInWithGoogle } = useAuth();
+  const { t, language } = useLanguage();
+  const { signIn, signUp, signInWithGoogle, signInWithGoogleCredential } = useAuth();
   const [mode, setMode] = useState(initialMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  // 'loading' while Google's script loads, 'ready' once its button is drawn,
+  // 'fallback' if it can't load (blocked or slow): then our own button opens
+  // Firebase's pop-up instead.
+  const [googleState, setGoogleState] = useState('loading');
+  const googleBoxRef = useRef(null);
+  const handleCredentialRef = useRef(null);
+
+  // Kept in a ref so Google's button (drawn once) always calls the latest
+  // version of this handler.
+  useEffect(() => {
+    handleCredentialRef.current = async (idToken) => {
+      setBusy(true);
+      setError('');
+      try {
+        await signInWithGoogleCredential(idToken);
+        onClose();
+      } catch (err) {
+        console.warn('Google sign-in failed:', err);
+        setError(mapAuthErrorMessage(err, t));
+        setBusy(false);
+      }
+    };
+  });
+
+  const isSignUpMode = mode === 'signup';
+  useEffect(() => {
+    let cancelled = false;
+    renderGoogleButton(googleBoxRef.current, {
+      onCredential: (idToken) => handleCredentialRef.current(idToken),
+      locale: language === 'ar' ? 'ar' : 'en',
+      text: isSignUpMode ? 'signup_with' : 'signin_with',
+    })
+      .then(() => {
+        if (!cancelled) setGoogleState('ready');
+      })
+      .catch((err) => {
+        console.warn('Google sign-in button unavailable, using fallback:', err && err.message);
+        if (!cancelled) setGoogleState('fallback');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [language, isSignUpMode]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -79,9 +123,17 @@ export default function AuthModal({ onClose, initialMode = 'signin' }) {
 
       <div className="modal__divider">{t.orDivider}</div>
 
-      <Button variant="google" block onClick={handleGoogle} disabled={busy}>
-        <GoogleIcon /> {t.signInWithGoogleButton}
-      </Button>
+      {googleState !== 'fallback' && (
+        <div className="google-box">
+          <div ref={googleBoxRef} className="google-box__button" />
+          {googleState === 'loading' && <p className="google-box__loading">{t.googleSignInLoading}</p>}
+        </div>
+      )}
+      {googleState === 'fallback' && (
+        <Button variant="google" block onClick={handleGoogle} disabled={busy}>
+          <GoogleIcon /> {t.signInWithGoogleButton}
+        </Button>
+      )}
 
       <div className="modal__switch">
         {isSignUp ? (

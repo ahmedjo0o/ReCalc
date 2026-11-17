@@ -4,8 +4,8 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithCredential,
+  browserPopupRedirectResolver,
   signOut as firebaseSignOut,
   GoogleAuthProvider,
   updateProfile,
@@ -15,20 +15,33 @@ import {
   EmailAuthProvider,
   sendPasswordResetEmail,
 } from 'firebase/auth';
-import { auth } from '../lib/firebase.js';
+import { auth, app } from '../lib/firebase.js';
 import { callDeleteAccount } from '../lib/api.js';
 
 const AuthContext = createContext(null);
 
-// Error codes that mean "the popup flow itself didn't work" (blocked,
-// closed before completing, superseded by another popup request) — as
-// opposed to a real auth failure — worth falling back to a full-page
-// redirect for, on any platform.
-const POPUP_FALLBACK_CODES = ['auth/popup-blocked', 'auth/popup-closed-by-user', 'auth/cancelled-popup-request'];
+// The signed-in user Firebase saved on this device last time (name and email
+// only), read straight from storage without any network request. Firebase
+// confirms the session online before it reports a user, which can take
+// seconds on a cold iPhone Safari launch; this lets the header greet the
+// person immediately instead of showing a spinner. It is only used for
+// display: anything that reads or writes data still waits for the real user.
+function readSavedUser() {
+  try {
+    const raw = localStorage.getItem(`firebase:authUser:${app.options.apiKey}:[DEFAULT]`);
+    if (!raw) return null;
+    const saved = JSON.parse(raw);
+    if (!saved || !saved.uid) return null;
+    return { uid: saved.uid, displayName: saved.displayName || '', email: saved.email || '' };
+  } catch {
+    return null;
+  }
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [savedUser] = useState(readSavedUser);
   const [authTiming, setAuthTiming] = useState(null);
 
   useEffect(() => {
@@ -72,16 +85,6 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  // Picks up the result once the browser comes back from a signInWithRedirect
-  // round-trip (onAuthStateChanged above will also fire once this resolves).
-  // Resolves null on every ordinary page load that never involved a
-  // redirect — that's expected, not logged as an error.
-  useEffect(() => {
-    getRedirectResult(auth).catch((err) => {
-      console.error('Google redirect sign-in failed:', err.code, err.message);
-    });
-  }, []);
-
   async function signUp(email, password, displayName = '') {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     if (displayName) {
@@ -96,21 +99,18 @@ export function AuthProvider({ children }) {
     return cred.user;
   }
 
+  // Main Google sign-in: the ID token comes from Google's own button
+  // (lib/googleSignIn.js) and is exchanged for a Firebase session here.
+  async function signInWithGoogleCredential(idToken) {
+    const cred = await signInWithCredential(auth, GoogleAuthProvider.credential(idToken));
+    return cred.user;
+  }
+
+  // Fallback only, for when Google's button can't load (blocked script):
+  // Firebase's own pop-up.
   async function signInWithGoogle() {
-    const provider = new GoogleAuthProvider();
-    try {
-      const cred = await signInWithPopup(auth, provider);
-      return cred.user;
-    } catch (err) {
-      if (POPUP_FALLBACK_CODES.includes(err.code)) {
-        // Full-page redirect instead — this navigates away, so there's no
-        // user to return here; the caller's UI unmounts, and the signed-in
-        // user shows up via onAuthStateChanged once the browser returns.
-        await signInWithRedirect(auth, provider);
-        return null;
-      }
-      throw err;
-    }
+    const cred = await signInWithPopup(auth, new GoogleAuthProvider(), browserPopupRedirectResolver);
+    return cred.user;
   }
 
   async function logout() {
@@ -143,7 +143,7 @@ export function AuthProvider({ children }) {
 
     if (providers.includes('google.com')) {
       try {
-        await reauthenticateWithPopup(u, new GoogleAuthProvider());
+        await reauthenticateWithPopup(u, new GoogleAuthProvider(), browserPopupRedirectResolver);
         await updatePassword(u, newPassword);
         return { mode: 'set' };
       } catch (err) {
@@ -166,7 +166,7 @@ export function AuthProvider({ children }) {
     if (hasPassword) {
       await reauthenticateWithCredential(u, EmailAuthProvider.credential(u.email, password));
     } else {
-      await reauthenticateWithPopup(u, new GoogleAuthProvider());
+      await reauthenticateWithPopup(u, new GoogleAuthProvider(), browserPopupRedirectResolver);
     }
     await u.getIdToken(true);
     await callDeleteAccount();
@@ -176,10 +176,13 @@ export function AuthProvider({ children }) {
   const value = {
     user,
     loading,
+    // While loading: who was signed in on this device last time (display only).
+    savedUser: loading ? savedUser : null,
     authTiming,
     signUp,
     signIn,
     signInWithGoogle,
+    signInWithGoogleCredential,
     logout,
     updateDisplayName,
     changePassword,
