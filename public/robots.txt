@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+# Personal and private pages: nothing useful for search results.
+Disallow: /manage
+Disallow: /history
+Disallow: /bill
+
+Sitemap: https://re-calc.com/sitemap.xml

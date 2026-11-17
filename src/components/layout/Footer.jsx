@@ -10,6 +10,7 @@ export default function Footer() {
       <div className="site-footer__links">
         <a href="/about.html">{t.footerAbout}</a>
         <a href="/privacy.html">{t.footerPrivacy}</a>
+        <a href="/terms.html">{t.footerTerms}</a>
         <a href="/contact.html">{t.footerContact}</a>
         <a href="/blog.html">{t.footerBlog}</a>
       </div>

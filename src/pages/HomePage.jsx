@@ -5,6 +5,7 @@ import ManualEntryStep from '../components/calculator/ManualEntryStep.jsx';
 import AssignStep from '../components/calculator/AssignStep.jsx';
 import ResultStep from '../components/calculator/ResultStep.jsx';
 import InstallAppButton from '../components/ui/InstallAppButton.jsx';
+import HomeInfo from '../components/home/HomeInfo.jsx';
 import { useCalculatorFlow } from '../hooks/useCalculatorFlow.js';
 
 export default function HomePage() {
@@ -80,6 +81,7 @@ export default function HomePage() {
       )}
 
       {step === 'method' && <InstallAppButton />}
+      {step === 'method' && <HomeInfo />}
     </main>
   );
 }

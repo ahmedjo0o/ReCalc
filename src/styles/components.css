@@ -1192,3 +1192,96 @@
 .settle__payer .settle__paid-input {
   flex: 0 1 130px;
 }
+
+/* ---------- Home page information ---------- */
+
+.home-info {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  line-height: 1.7;
+}
+
+.home-info__title {
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin: 0 0 10px;
+}
+
+.home-info__intro {
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto 8px;
+}
+
+.home-info__h3 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--color-accent);
+  margin: 22px 0 10px;
+}
+
+.home-info__how {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.home-info__how li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.home-info__how p {
+  margin: 2px 0 0;
+}
+
+.home-info__num {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: #fff;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-info__features {
+  margin: 0;
+  padding-inline-start: 20px;
+}
+
+.home-info__faq details {
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+}
+
+.home-info__faq summary {
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.home-info__faq p {
+  margin: 8px 0 0;
+}
+
+@media (min-width: 768px) {
+  .home-info__how {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .home-info__how li {
+    flex-direction: column;
+  }
+}
