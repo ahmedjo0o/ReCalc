@@ -870,8 +870,20 @@
 }
 
 .bill-item__who {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: #556;
+}
+
+/* Names of whoever chose the item: bold green so everyone can see at a
+   glance what is taken. Items nobody has chosen yet stay grey. */
+.bill-item__claimer {
+  font-weight: 800;
+  color: #1c7a35;
+}
+
+.bill-item__nobody {
+  color: #8a94a0;
+  font-style: italic;
 }
 
 .bill-item__price {

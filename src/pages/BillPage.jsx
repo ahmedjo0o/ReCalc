@@ -368,7 +368,16 @@ export default function BillPage() {
                     <span className="bill-item__main">
                       <span className="bill-item__label">{it.label}</span>
                       <span className="bill-item__who">
-                        {who.length === 0 ? t.nobodyYet : who.map((n) => (n === myName ? `${n} ${t.youLabel}` : n)).join(language === 'ar' ? '، ' : ', ')}
+                        {who.length === 0 ? (
+                          <span className="bill-item__nobody">{t.nobodyYet}</span>
+                        ) : (
+                          who.map((n, k) => (
+                            <span key={n}>
+                              {k > 0 && (language === 'ar' ? '، ' : ', ')}
+                              <strong className="bill-item__claimer">{n === myName ? `${n} ${t.youLabel}` : n}</strong>
+                            </span>
+                          ))
+                        )}
                       </span>
                     </span>
                     <span className="bill-item__price">{fm(it.price)}</span>
