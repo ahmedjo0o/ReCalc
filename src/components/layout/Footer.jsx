@@ -12,6 +12,12 @@ export default function Footer() {
         <a href="/blog.html">{t.footerBlog}</a>
       </div>
       <span className="site-footer__rights">{t.footerText}</span>
+      <span className="site-footer__recaptcha">
+        {t.recaptchaNotice}{' '}
+        <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">{t.recaptchaPrivacy}</a>
+        {' · '}
+        <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer">{t.recaptchaTerms}</a>
+      </span>
     </footer>
   );
 }

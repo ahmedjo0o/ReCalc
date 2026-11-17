@@ -44,3 +44,10 @@ body[dir='ltr'] {
   display: flex;
   flex-direction: column;
 }
+
+/* reCAPTCHA (used by App Check) adds a floating badge to every page. Google
+   allows hiding it as long as the notice it replaces is shown elsewhere,
+   which the footer does (see Footer.jsx). */
+.grecaptcha-badge {
+  visibility: hidden;
+}

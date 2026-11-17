@@ -2,6 +2,7 @@ import { useCallback, useReducer } from 'react';
 import { callCalculateBill } from '../lib/api.js';
 import { attachTipToHistory } from '../lib/firestoreService.js';
 import { mapServerErrorMessage } from '../lib/errors.js';
+import { ensureAppCheck } from '../lib/appCheck.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useLanguage } from '../context/LanguageContext.jsx';
 
@@ -55,7 +56,10 @@ export function useCalculatorFlow() {
   const { user } = useAuth();
   const { language, t } = useLanguage();
 
-  const chooseMethod = useCallback((method) => dispatch({ type: 'CHOOSE_METHOD', method }), []);
+  const chooseMethod = useCallback((method) => {
+    ensureAppCheck();
+    dispatch({ type: 'CHOOSE_METHOD', method });
+  }, []);
   const scanContinue = useCallback((receipt) => dispatch({ type: 'SCAN_CONTINUE', receipt }), []);
   const setNumPeople = useCallback((value) => dispatch({ type: 'SET_NUM_PEOPLE', value }), []);
   const setNames = useCallback((names) => dispatch({ type: 'SET_NAMES', names }), []);

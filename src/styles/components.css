@@ -1402,3 +1402,14 @@
   font-size: 0.88rem;
   opacity: 0.85;
 }
+
+.site-footer__recaptcha {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.72rem;
+  color: #345;
+}
+
+.site-footer__recaptcha a {
+  color: inherit;
+}
