@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 
 export default function Header() {
-  const { t } = useLanguage();
+  const { t, language, toggleLanguage } = useLanguage();
   const { user, loading, authTiming, logout } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);
   const showDebugTiming = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debug') === '1';
@@ -47,6 +47,10 @@ export default function Header() {
             </>
           )}
         </div>
+        {/* Up here (not in the footer) so it can be switched without scrolling. */}
+        <button type="button" className="lang-toggle" onClick={toggleLanguage}>
+          {language === 'ar' ? t.languageEnglish : t.languageArabic}
+        </button>
       </div>
 
       {showDebugTiming && authTiming && (
